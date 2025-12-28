@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id           Int                 @id @default(autoincrement())
+  productCode  String              @unique @map("product_code")
+  price        String
+  sizes        String[]
+  defaultSize  String?             @map("default_size")
+  images       String[]
+  isNew        Boolean             @default(false) @map("is_new")
+  isRunners    Boolean             @default(false) @map("is_runners")
+  inStock      Boolean             @default(true) @map("in_stock")
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+  descriptions Description[]
+  features     Feature[]
+  collections  ProductCollection[]
+  colors       ProductColor[]
+  productNames ProductName[]
+  styles       ProductStyle[]
+
+  @@index([inStock])
+  @@index([createdAt])
+  @@map("products")
+}
+
+model ProductName {
+  id        Int     @id @default(autoincrement())
+  productId Int     @map("product_id")
+  locale    String
+  name      String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, locale])
+  @@index([name])
+  @@map("product_names")
+}
+
+model Description {
+  id          Int     @id @default(autoincrement())
+  productId   Int     @map("product_id")
+  locale      String
+  description String
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, locale])
+  @@map("descriptions")
+}
+
+model Feature {
+  id              Int      @id @default(autoincrement())
+  productId       Int      @map("product_id")
+  locale          String
+  head            String
+  careAndWarranty String[] @map("care_and_warranty")
+  technicalInfo   String[] @map("technical_info")
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, locale])
+  @@map("features")
+}
+
+model ProductColor {
+  id        Int     @id @default(autoincrement())
+  productId Int     @map("product_id")
+  locale    String
+  name      String
+  value     String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, locale])
+  @@map("product_colors")
+}
+
+model ProductCollection {
+  id        Int     @id @default(autoincrement())
+  productId Int     @map("product_id")
+  locale    String
+  name      String
+  value     String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, locale])
+  @@map("product_collections")
+}
+
+model ProductStyle {
+  id        Int     @id @default(autoincrement())
+  productId Int     @map("product_id")
+  locale    String
+  name      String
+  value     String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, locale])
+  @@map("product_styles")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String?
+  role      UserRole @default(ADMIN)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  SUPER_ADMIN
+}

@@ -1,0 +1,578 @@
+{
+  "meta": {
+    "title": "Carpet Store - Premium Rugs Online",
+    "description": "Buy premium rugs and carpets online. Handmade, custom sizes, and modern designs.",
+    "keywords": [
+      "rugs",
+      "carpet",
+      "handmade rugs",
+      "modern carpets",
+      "custom rugs"
+    ],
+    "openGraph": {
+      "title": "Carpet Store - Premium Rugs Online",
+      "description": "Buy premium rugs and carpets online. Handmade, custom sizes, and modern designs.",
+      "image": "https://www.koenigcarpet.ru/og-root.jpg"
+    },
+    "twitter": {
+      "title": "Carpet Store - Premium Rugs Online",
+      "description": "Buy premium rugs and carpets online. Handmade, custom sizes, and modern designs.",
+      "image": "https://www.koenigcarpet.ru/og-root.jpg"
+    }
+  },
+  "header": {
+    "custom-size": "ÖZEL BOYUT",
+    "custom-color": "ÖZEL RENK",
+    "custom-design": "ÖZEL TASARIM"
+  },
+  "footer": {
+    "placeholder": "Enter your e-mail...",
+    "send": "Send",
+    "policies": "POLICIES",
+    "delivery-return": "Teslimat",
+    "company": "COMPANY",
+    "blog": "Blog",
+    "contact": "Contact",
+    "about-us": "About Us",
+    "support": "SUPPORT",
+    "faq": "FAQ",
+    "whatsapp-line": "WhatsApp Line",
+    "copyright": "© 2025 All rights reserved."
+  },
+  "home": {
+    "categories": [
+      {
+        "title": "YENİ HALILAR",
+        "description": "EN SON HALI MODELLERİ",
+        "image": "/static/image1.png",
+        "path": "/new-rugs"
+      },
+      {
+        "title": "TÜM HALILAR",
+        "description": "SİPARİŞE GÖRE ÜRETİLEN HALI MODELLERİ",
+        "image": "/static/image2.png",
+        "path": "/all-rugs"
+      },
+      {
+        "title": "MARKİZ",
+        "description": "YOĞUN DOKULU, CANLI RENKLİ HALILAR",
+        "image": "/static/image3.png",
+        "path": "/marquise"
+      },
+      {
+        "title": "ORYANTAL",
+        "description": "KLASİK HALILAR MODERN DOKU İLE",
+        "image": "/static/image4.png",
+        "path": "/oriential"
+      },
+      {
+        "title": "AMORF",
+        "description": "DOĞADAN İLHAM ALINMIŞ ORGANİK ŞEKİLLİ HALILAR",
+        "image": "/static/image5.png",
+        "path": "/amorph"
+      },
+      {
+        "title": "ETNİK",
+        "description": "GELENEKSEL MOTİF İLE MODERN HALILAR",
+        "image": "/static/image6.png",
+        "path": "/ethnique"
+      },
+      {
+        "title": "KABUK",
+        "description": "DOĞAL RENKLİ MİNİMAL HALILAR",
+        "image": "/static/image7.png",
+        "path": "/shell"
+      },
+      {
+        "title": "Yolluk",
+        "description": "DOĞAL RENKLİ MİNİMAL HALILAR",
+        "image": "/static/image7.png",
+        "path": "/runners"
+      }
+    ],
+    "meta": {
+      "title": "Carpet Store | Premium Rugs & Carpets",
+      "description": "Discover our wide collection of handmade and premium machine-woven carpets. Shop rugs by size, color, and design for your home.",
+      "keywords": [
+        "carpet",
+        "rugs",
+        "handmade rugs",
+        "oriental carpets",
+        "luxury carpets",
+        "buy carpets online"
+      ],
+      "openGraph": {
+        "title": "Carpet Store | Premium Rugs & Carpets",
+        "description": "Discover premium rugs and carpets in various sizes, colors, and designs. Perfect for living rooms, bedrooms, and offices.",
+        "image": "https://www.koenigcarpet.ru/og-image.png"
+      },
+      "twitter": {
+        "title": "Carpet Store | Premium Rugs & Carpets",
+        "description": "Shop premium rugs & carpets with modern and traditional designs.",
+        "image": "https://www.koenigcarpet.ru/og-image.png"
+      }
+    }
+  },
+  "faq": {
+    "faq": "Sıkça Sorulan Sorular",
+    "items": [
+      {
+        "title": "alışveriş",
+        "icon": "ShoppingBag",
+        "sections": [
+          {
+            "title": "KOENIGROOM SALON",
+            "texts": [
+              "Stoktaki halılarımızı \"Koenigroom\" salonumuzda inceleyebilir ve satın alabilirsiniz. Adresimiz: Molodoy Gvardii Cd., 34/2.",
+              "Diğer tüm modeller ve özel sipariş halılar sipariş üzerine mevcuttur.",
+              "Mükemmel halıyı seçmek için sizi salonumuzda bekliyoruz!"
+            ]
+          }
+        ]
+      },
+      {
+        "title": "ödeme",
+        "icon": "CreditCard",
+        "sections": [
+          {
+            "title": "ÖDEME SEÇENEKLERİ",
+            "texts": [
+              "Siparişinizi banka üzerinden fatura ile, kart ile satın alma yoluyla, QR kodu ile veya karta transfer ile ödeyebilirsiniz. Size uygun ödeme yöntemini seçin ve favori halınızın keyfini çıkarın."
+            ]
+          }
+        ]
+      },
+      {
+        "title": "teslimat",
+        "icon": "Truck",
+        "sections": [
+          {
+            "title": "TESLİMAT",
+            "texts": [
+              "Teslimat maliyeti halının fiyatına dahildir.",
+              "Fabrikadan özel siparişler doğrudan salonumuza teslim edilir."
+            ]
+          }
+        ]
+      },
+      {
+        "title": "ürün kullanımı",
+        "icon": "Package",
+        "sections": [
+          {
+            "title": "ÜRÜN TÜRLERİ",
+            "texts": [
+              "Halılarımız dokuma teknikleri, desenler, renk sayısı, ağırlık ve tasarım farklarına göre değişir.",
+              "Bu nedenle fiyatlandırma ürün kategorisine göre farklılık gösterir."
+            ]
+          },
+          {
+            "title": "ÖLÇÜ FARKLILIKLARI",
+            "texts": [
+              "Halılar boyama ve/veya yıkama sonrası çekebilir.",
+              "Çekme oranı partiden partiye değişebilir.",
+              "+/- %3 ölçü sapmaları normal kabul edilir."
+            ]
+          },
+          {
+            "title": "KENAR DALGALANMASI",
+            "texts": [
+              "Boyama/yıkama nedeniyle kenarlarda dalgalanma olabilir.",
+              "Dalgalanmayı azaltmak için kenarları silindirik bir cisimle bastırın."
+            ]
+          },
+          {
+            "title": "KAYMA",
+            "texts": [
+              "Halı kaymasını önlemek için kaymaz bant veya kaymaz paspas kullanın."
+            ]
+          },
+          {
+            "title": "GARANTİ",
+            "texts": [
+              "Halılarımız üretim hatalarına karşı 1 yıl garantilidir.",
+              "Sorun yaşarsanız, fotoğraf ve açıklama ile destek hattımızla iletişime geçin.",
+              "Duruma göre ürün değişimi veya iade yapılabilir."
+            ]
+          }
+        ]
+      },
+      {
+        "title": "özel üretim",
+        "icon": "Brush",
+        "sections": [
+          {
+            "title": "ÖZEL ÖLÇÜ",
+            "texts": [
+              "300 cm genişliğe ve 1500 cm uzunluğa kadar halı üretebiliriz.",
+              "Özel ölçü üretimlerinde fiyat farklılıkları uygulanır."
+            ]
+          },
+          {
+            "title": "ÖZEL RENK SEÇENEĞİ",
+            "texts": [
+              "Seçeneklerimizden seçtiğiniz renklere göre özel sipariş üretebiliriz, ek ücret yoktur."
+            ]
+          },
+          {
+            "title": "ÖZEL DESEN TASARIMI",
+            "texts": [
+              "Tercihleriniz doğrultusunda özel tasarımlar oluşturabiliriz.",
+              "Özel tasarım fiyatları adede göre belirlenir."
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "shared": {
+    "loadMore": "Daha fazla göster",
+    "ourProjects": "ÜRÜNLERIMIZ",
+    "rugDetail": "HALI AYRILMALAR",
+    "features": "ÜRÜN ÖZELLİKLERİ",
+    "produced": "14 iş gününde sipariş verildikten sonra üretildi.",
+    "careAndWarranty": "BAKIM VE GARANTİ",
+    "technicalInfo": "TEKNİK BİLGİLER",
+    "notFound": "Halı bulunamadı",
+    "colors": "RENKLER",
+    "standartSize": "Standart Boyut",
+    "customSize": "Ozel Boyut",
+    "calculatePrice": "Fiyat hesapla",
+    "selectedPrice": "Secilen fiyat",
+    "styles": "STİLLER",
+    "collections": "KOLEKSİYONLAR",
+    "sizes": "BEDENLER",
+    "sortBy": "SIRALAMA KRİTERİ",
+    "sortNameAsc": "ÜRÜN ADI (A'DAN Z'YE)",
+    "sortNameDesc": "ÜRÜN ADI (Z'DEN A'YA)",
+    "sortPriceAsc": "FİYAT (DÜŞÜKTEN YÜKSEĞE)",
+    "sortPriceDesc": "FİYAT (YÜKSEKTEN DÜŞÜĞE)",
+    "sortStockCode": "STOK KODU",
+    "sortNewest": "YENİDEN ESKİYE",
+    "sortOldest": "ESKİDEN YENİYE",
+    "filterBy": "FİLTRELEME KRİTERİ",
+    "sideBarLinks": [
+      {
+        "title": "Tüm Halılar",
+        "path": "/all-rugs"
+      },
+      {
+        "title": "Stokta Halılar",
+        "path": "/rugs-in-stock"
+      },
+      {
+        "title": "Yeni Halılar",
+        "path": "/new-rugs"
+      },
+      {
+        "title": "Koşu Halıları",
+        "path": "/runners"
+      },
+      {
+        "title": "Projelerimiz",
+        "path": "/our-projects"
+      },
+      {
+        "title": "Koleksiyon",
+        "children": [
+          {
+            "title": "Amorf",
+            "value": "amorph"
+          },
+          {
+            "title": "Mercan",
+            "value": "coral"
+          },
+          {
+            "title": "Kristal",
+            "value": "crystal"
+          },
+          {
+            "title": "Etnik",
+            "value": "ethnique"
+          },
+          {
+            "title": "İstanbul",
+            "value": "istanbul"
+          },
+          {
+            "title": "Markiz",
+            "value": "marquise"
+          },
+          {
+            "title": "Marakeş",
+            "value": "marrakesh"
+          },
+          {
+            "title": "Monokrom",
+            "value": "monochrome"
+          },
+          {
+            "title": "Doğal",
+            "value": "naturale"
+          },
+          {
+            "title": "Oryantal",
+            "value": "oriental"
+          },
+          {
+            "title": "Patch (Yamali)",
+            "value": "patch"
+          },
+          {
+            "title": "İnci",
+            "value": "pearl"
+          },
+          {
+            "title": "Düz",
+            "value": "plain"
+          },
+          {
+            "title": "Safir",
+            "value": "sapphire"
+          },
+          {
+            "title": "Kabuk",
+            "value": "shell"
+          },
+          {
+            "title": "Teslis",
+            "value": "trinity"
+          },
+          {
+            "title": "Vintage",
+            "value": "vintage"
+          }
+        ],
+        "path": "/collection"
+      },
+      {
+        "title": "Renkler",
+        "children": [
+          {
+            "title": "Bej",
+            "value": "beige"
+          },
+          {
+            "title": "Beyaz",
+            "value": "white"
+          },
+          {
+            "title": "Çok Renkli",
+            "value": "multi-color"
+          },
+          {
+            "title": "Ecru",
+            "value": "ecru"
+          },
+          {
+            "title": "Gri",
+            "value": "grey"
+          },
+          {
+            "title": "Kahverengi",
+            "value": "brown"
+          },
+          {
+            "title": "Kırmızı",
+            "value": "red"
+          },
+          {
+            "title": "Mavi",
+            "value": "blue"
+          },
+          {
+            "title": "Mor",
+            "value": "purple"
+          },
+          {
+            "title": "Pembe",
+            "value": "pink"
+          },
+          {
+            "title": "Sarı",
+            "value": "yellow"
+          },
+          {
+            "title": "Siyah",
+            "value": "black"
+          },
+          {
+            "title": "Turuncu",
+            "value": "orange"
+          },
+          {
+            "title": "Yeşil",
+            "value": "green"
+          }
+        ],
+        "path": "/colors"
+      },
+      {
+        "title": "Stil",
+        "children": [
+          {
+            "title": "Soyut",
+            "value": "abstract"
+          },
+          {
+            "title": "Amorf",
+            "value": "amorphous"
+          },
+          {
+            "title": "Sanat",
+            "value": "art"
+          },
+          {
+            "title": "Art Deco",
+            "value": "art deco"
+          },
+          {
+            "title": "Kenarlı",
+            "value": "bordered"
+          },
+          {
+            "title": "Çiçekli",
+            "value": "floral"
+          },
+          {
+            "title": "Düz",
+            "value": "solid"
+          },
+          {
+            "title": "Etnik",
+            "value": "ethnic"
+          },
+          {
+            "title": "Geometrik",
+            "value": "geometric"
+          },
+          {
+            "title": "Klasik",
+            "value": "classic"
+          },
+          {
+            "title": "Modern",
+            "value": "modern"
+          },
+          {
+            "title": "Patchwork",
+            "value": "patchwork"
+          }
+        ],
+        "path": "/styles"
+      },
+      {
+        "title": "İletişim",
+        "path": "/contact"
+      },
+      {
+        "title": "SSS",
+        "path": "/faq"
+      },
+      {
+        "title": "Geri Bildirim",
+        "path": "/feedbacl"
+      }
+    ]
+  },
+  "contacts": {
+    "Address": {
+      "name": "Adres",
+      "value": "Kaliningrad, M. Gvardii Cd. 34k2"
+    },
+    "Phone": {
+      "name": "Telefon",
+      "value": "+7 (906) 230-20-22"
+    },
+    "E-Mail": {
+      "name": "E-Posta",
+      "value": "salon@koenigroom.ru"
+    },
+    "WhatsApp": {
+      "name": "Vatsap",
+      "value": "7 (906) 230-20-22"
+    },
+    "Instagram": {
+      "name": "Sosyal Medya",
+      "value": "koenigroom"
+    },
+    "social": {
+      "label": "Sosyal Medya",
+      "icon": "Share2",
+      "value": [
+        {
+          "platform": "Instagram",
+          "username": "koenigroom",
+          "link": "https://instagram.com/koenigroom"
+        },
+        {
+          "platform": "Facebook",
+          "username": "koenigroom",
+          "link": "https://facebook.com/koenigroom"
+        },
+        {
+          "platform": "Linkedin",
+          "username": "koenigroom",
+          "link": "https://linkedin.com/company/koenigroom"
+        },
+        {
+          "platform": "MessageCircle",
+          "username": "WhatsApp",
+          "link": "https://wa.me/79062302022"
+        }
+      ]
+    }
+  },
+  "cart": {
+    "basket": "Sepet",
+    "clearCart": "Sepeti Temizle",
+    "freeShipping": "Ücretsiz kargo hakkınız sepetinize uygulandı",
+    "continueShopping": "Alışverişe Devam Et",
+    "campaigns": "Kampanyalar",
+    "orderSummary": "Sipariş Özeti",
+    "basketAmount": "Sepet tutarı",
+    "shippingCost": "Kargo ücreti",
+    "free": "Ücretsiz",
+    "discount": "İndirim",
+    "totalAmount": "Toplam tutar",
+    "completeShopping": "Alışverişi Tamamla",
+    "redeemGiftVoucher": "Hediye Çeki Kullan",
+    "lastViewed": "Son | Görüntülenen",
+    "addToBasket": "Sepete Ekle",
+    "inBasket": "Sepette",
+    "piece": "Adet",
+    "yourCustomizations": "Özelleştirmeleriniz",
+    "quantity": "Miktar",
+    "secondProductDiscount": "2. Ürünü %10 İndirim",
+    "allBankTransferDiscount": "Tüm HAVALE Siparişlerinde %5 İndirim",
+    "order": {
+      "orderNow": "Şimdi Sipariş Ver",
+      "newOrder": "🛒 Yeni Sipariş",
+      "name": "İsim",
+      "phone": "Telefon",
+      "address": "Adres",
+      "cart": "Sepet",
+      "subtotal": "Ara Toplam",
+      "discount": "İndirim",
+      "total": "Toplam",
+      "stock": "Stok Kodu",
+      "enterDetails": "Bilgilerinizi girin",
+      "fillAllFields": "Lütfen tüm alanları doldurun",
+      "sending": "Gönderiliyor...",
+      "success": "Sipariş başarıyla gönderildi! ✅",
+      "error": "Sipariş gönderilirken hata ❌",
+      "confirm": "Onayla",
+      "cancel": "İptal"
+    }
+  },
+  "searchComp": {
+    "placeholder": "Halı ara...",
+    "colors": "Renkler",
+    "searching": "Aranıyor...",
+    "unnamedProduct": "İsimsiz Ürün",
+    "noProducts": "\"{query}\" için ürün bulunamadı",
+    "tryDifferent": "Farklı bir arama terimi deneyin",
+    "startTyping": "Ürün aramaya başlamak için yazmaya başlayın"
+  }
+}

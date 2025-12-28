@@ -1,0 +1,576 @@
+{
+  "meta": {
+    "title": "Carpet Store - Premium Rugs Online",
+    "description": "Buy premium rugs and carpets online. Handmade, custom sizes, and modern designs.",
+    "keywords": [
+      "rugs",
+      "carpet",
+      "handmade rugs",
+      "modern carpets",
+      "custom rugs"
+    ],
+    "openGraph": {
+      "title": "Carpet Store - Premium Rugs Online",
+      "description": "Buy premium rugs and carpets online. Handmade, custom sizes, and modern designs.",
+      "image": "https://www.koenigcarpet.ru/og-root.jpg"
+    },
+    "twitter": {
+      "title": "Carpet Store - Premium Rugs Online",
+      "description": "Buy premium rugs and carpets online. Handmade, custom sizes, and modern designs.",
+      "image": "https://www.koenigcarpet.ru/og-root.jpg"
+    }
+  },
+  "header": {
+    "custom-size": "CUSTOM SIZE",
+    "custom-color": "CUSTOM COLOR",
+    "custom-design": "CUSTOM DESIGN"
+  },
+  "footer": {
+    "placeholder": "Enter your e-mail...",
+    "send": "Send",
+    "policies": "POLICIES",
+    "delivery-return": "Delivery",
+    "company": "COMPANY",
+    "blog": "Blog",
+    "contact": "Contact",
+    "about-us": "About Us",
+    "support": "SUPPORT",
+    "faq": "FAQ",
+    "whatsapp-line": "WhatsApp Line",
+    "copyright": "© 2025 All rights reserved."
+  },
+  "home": {
+    "categories": [
+      {
+        "title": "NEW RUGS",
+        "description": "LATEST RUG MODELS",
+        "image": "/static/image1.png",
+        "path": "/new-rugs"
+      },
+      {
+        "title": "ALL RUGS",
+        "description": "MADE TO ORDER RUG MODELS",
+        "image": "/static/image2.png",
+        "path": "/all-rugs"
+      },
+      {
+        "title": "MARQUISE",
+        "description": "INTENSE TEXTURED, VIBRANT COLORED RUGS",
+        "image": "/static/image3.png",
+        "path": "/marquise"
+      },
+      {
+        "title": "ORIENTAL",
+        "description": "CLASSIC RUGS WITH MODERN TEXTURE",
+        "image": "/static/image4.png",
+        "path": "/oriental"
+      },
+      {
+        "title": "AMORPH",
+        "description": "ORGANIC SHAPE RUGS INSPIRED BY NATURE",
+        "image": "/static/image5.png",
+        "path": "/amorph"
+      },
+      {
+        "title": "ETHNIQUE",
+        "description": "MODERN RUGS WITH TRADITIONAL MOTIF",
+        "image": "/static/image6.png",
+        "path": "/ethnique"
+      },
+      {
+        "title": "SHELL",
+        "description": "NATURAL COLORED MINIMAL RUGS",
+        "image": "/static/image7.png",
+        "path": "/shell"
+      },
+      {
+        "title": "RUNNERS",
+        "description": "NATURAL COLORED MINIMAL RUGS",
+        "image": "/static/image7.png",
+        "path": "/runners"
+      }
+    ],
+    "meta": {
+      "title": "Carpet Store | Premium Rugs & Carpets",
+      "description": "Discover our wide collection of handmade and premium machine-woven carpets. Shop rugs by size, color, and design for your home.",
+      "keywords": [
+        "carpet",
+        "rugs",
+        "handmade rugs",
+        "oriental carpets",
+        "luxury carpets",
+        "buy carpets online"
+      ],
+      "openGraph": {
+        "title": "Carpet Store | Premium Rugs & Carpets",
+        "description": "Discover premium rugs and carpets in various sizes, colors, and designs. Perfect for living rooms, bedrooms, and offices.",
+        "image": "https://www.koenigcarpet.ru/og-image.png"
+      },
+      "twitter": {
+        "title": "Carpet Store | Premium Rugs & Carpets",
+        "description": "Shop premium rugs & carpets with modern and traditional designs.",
+        "image": "https://www.koenigcarpet.ru/og-image.png"
+      }
+    }
+  },
+  "faq": {
+    "faq": "Frequently Asked Questions",
+    "items": [
+      {
+        "title": "shopping",
+        "icon": "ShoppingBag",
+        "sections": [
+          {
+            "title": "KOENIGROOM SALON",
+            "texts": [
+              "You can view and purchase rugs from our stock at our \"Koenigroom\" salon located at: Molodoy Gvardii St., 34 building 2.",
+              "All other models, as well as custom-made rugs, are available to order.",
+              "We are waiting for you in the salon to choose the perfect rug!"
+            ]
+          }
+        ]
+      },
+      {
+        "title": "payment",
+        "icon": "CreditCard",
+        "sections": [
+          {
+            "title": "PAYMENT OPTIONS",
+            "texts": [
+              "You can pay for your order by invoice through the bank, by card through acquiring, by QR code, or by transfer to a card. Choose a convenient payment method and enjoy your favorite rug."
+            ]
+          }
+        ]
+      },
+      {
+        "title": "delivery",
+        "icon": "Truck",
+        "sections": [
+          {
+            "title": "DELIVERY",
+            "texts": [
+              "Delivery costs are included in the price of the rug.",
+              "Custom orders from the factory are delivered directly to our salon."
+            ]
+          }
+        ]
+      },
+      {
+        "title": "product usage",
+        "icon": "Package",
+        "sections": [
+          {
+            "title": "PRODUCT TYPES",
+            "texts": [
+              "Our rugs vary in weaving techniques, patterns, color count, weight, and design differences.",
+              "Therefore, pricing differs by product category."
+            ]
+          },
+          {
+            "title": "MEASUREMENT DEVIATIONS",
+            "texts": [
+              "Rugs shrink after dyeing and/or washing.",
+              "Shrinkage rate can vary by batch.",
+              "Deviations of +/- 3% in measurements are considered normal."
+            ]
+          },
+          {
+            "title": "EDGE RIPPLING",
+            "texts": [
+              "Due to dyeing/washing, rippling may occur along the edges.",
+              "To minimize rippling, press along the edges with a cylindrical object."
+            ]
+          },
+          {
+            "title": "SLIPPAGE",
+            "texts": [
+              "To prevent rug slippage, use anti-slip adhesive tape or a non-slip mat."
+            ]
+          },
+          {
+            "title": "GUARANTEE",
+            "texts": [
+              "Our rugs are guaranteed for 1 year against manufacturing defects.",
+              "If you encounter issues, contact our support line with photos and a written description.",
+              "Depending on the situation, we may replace or refund the product."
+            ]
+          }
+        ]
+      },
+      {
+        "title": "custom production",
+        "icon": "Brush",
+        "sections": [
+          {
+            "title": "CUSTOM SIZE",
+            "texts": [
+              "We can produce rugs up to 300cm width and 1500cm length.",
+              "Pricing differences apply for custom size productions."
+            ]
+          },
+          {
+            "title": "SPECIAL COLOR VARIANT",
+            "texts": [
+              "We can produce custom orders based on colors you choose from our options without extra charge."
+            ]
+          },
+          {
+            "title": "SPECIAL PATTERN DESIGN",
+            "texts": [
+              "We can create custom designs according to your preferences.",
+              "Pricing is based on quantity for custom designs."
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "shared": {
+    "loadMore": "LOAD MORE",
+    "ourProjects": "OUR PROJECTS",
+    "rugDetail": "RUG DETAILS",
+    "features": "ITEM FEATURES",
+    "careAndWarranty": "CARE AND WARRANTY",
+    "technicalInfo": "TECHNICAL INFORMATION",
+    "produced": "Being produced within 14 business days upon order.",
+    "notFound": "Rug not found",
+    "colors": "COLORS",
+    "standartSize": "Standart Size",
+    "customSize": "Custom Size",
+    "calculatePrice": "Calculate Price",
+    "selectedPrice": "Selected price",
+    "sku": "SKU",
+    "copiedToClipboard": "Copied to clipboard!",
+    "styles": "STYLES",
+    "collections": "COLLECTIONS",
+    "sizes": "SIZES",
+    "sortBy": "SORT BY",
+    "sortNameAsc": "PRODUCT NAME (A TO Z)",
+    "sortNameDesc": "PRODUCT NAME (Z TO A)",
+    "sortPriceAsc": "PRICE (LOW TO HIGH)",
+    "sortPriceDesc": "PRICE (HIGH TO LOW)",
+    "sortStockCode": "STOCK CODE",
+    "sortNewest": "NEWEST TO OLDEST",
+    "sortOldest": "OLDEST TO NEWEST",
+    "filterBy": "FILTER BY",
+    "sideBarLinks": [
+      {
+        "title": "All Rugs",
+        "path": "/all-rugs"
+      },
+      {
+        "title": "Rugs in Stock",
+        "path": "/rugs-in-stock"
+      },
+      {
+        "title": "New Rugs",
+        "path": "/new-rugs"
+      },
+      {
+        "title": "Runners",
+        "path": "/runners"
+      },
+      {
+        "title": "Our Projects",
+        "path": "/our-projects"
+      },
+      {
+        "title": "Collection",
+        "children": [
+          {
+            "title": "Amorph",
+            "value": "amorph"
+          },
+          {
+            "title": "Coral",
+            "value": "coral"
+          },
+          {
+            "title": "Crystal",
+            "value": "crystal"
+          },
+          {
+            "title": "Ethnique",
+            "value": "ethnique"
+          },
+          {
+            "title": "Istanbul",
+            "value": "istanbul"
+          },
+          {
+            "title": "Marquise",
+            "value": "marquise"
+          },
+          {
+            "title": "Marrakesh",
+            "value": "marrakesh"
+          },
+          {
+            "title": "Monochrome",
+            "value": "monochrome"
+          },
+          {
+            "title": "Oriental",
+            "value": "oriental"
+          },
+          {
+            "title": "Patch",
+            "value": "patch"
+          },
+          {
+            "title": "Pearl",
+            "value": "pearl"
+          },
+          {
+            "title": "Plain",
+            "value": "plain"
+          },
+          {
+            "title": "Sapphire",
+            "value": "sapphire"
+          },
+          {
+            "title": "Shell",
+            "value": "shell"
+          },
+          {
+            "title": "Trinity",
+            "value": "trinity"
+          },
+          {
+            "title": "Vintage",
+            "value": "vintage"
+          }
+        ],
+        "path": "/collection"
+      },
+      {
+        "title": "Colors",
+        "children": [
+          {
+            "title": "Beige",
+            "value": "beige"
+          },
+          {
+            "title": "White",
+            "value": "white"
+          },
+          {
+            "title": "Multi-color",
+            "value": "multi"
+          },
+          {
+            "title": "Ecru",
+            "value": "ecru"
+          },
+          {
+            "title": "Grey",
+            "value": "grey"
+          },
+          {
+            "title": "Brown",
+            "value": "brown"
+          },
+          {
+            "title": "Red",
+            "value": "red"
+          },
+          {
+            "title": "Blue",
+            "value": "blue"
+          },
+          {
+            "title": "Purple",
+            "value": "purple"
+          },
+          {
+            "title": "Pink",
+            "value": "pink"
+          },
+          {
+            "title": "Yellow",
+            "value": "yellow"
+          },
+          {
+            "title": "Black",
+            "value": "black"
+          },
+          {
+            "title": "Orange",
+            "value": "orange"
+          },
+          {
+            "title": "Green",
+            "value": "green"
+          }
+        ],
+        "path": "/color"
+      },
+      {
+        "title": "Style",
+        "children": [
+          {
+            "title": "Abstract",
+            "value": "abstract"
+          },
+          {
+            "title": "Amorphous",
+            "value": "amorphous"
+          },
+          {
+            "title": "Art",
+            "value": "art"
+          },
+          {
+            "title": "Art Deco",
+            "value": "art_deco"
+          },
+          {
+            "title": "Bordered",
+            "value": "bordered"
+          },
+          {
+            "title": "Floral",
+            "value": "floral"
+          },
+          {
+            "title": "Solid",
+            "value": "solid"
+          },
+          {
+            "title": "Ethnic",
+            "value": "ethnic"
+          },
+          {
+            "title": "Geometric",
+            "value": "geometric"
+          },
+          {
+            "title": "Classic",
+            "value": "classic"
+          },
+          {
+            "title": "Modern",
+            "value": "modern"
+          },
+          {
+            "title": "Patchwork",
+            "value": "patchwork"
+          }
+        ],
+        "path": "/style"
+      },
+      {
+        "title": "Contact",
+        "path": "/contact"
+      },
+      {
+        "title": "FAQ",
+        "path": "/faq"
+      },
+      {
+        "title": "Feedback",
+        "path": "/feedback"
+      }
+    ]
+  },
+  "contacts": {
+    "Address": {
+      "name": "Address",
+      "value": "Kaliningrad, M. Gvardii St. 34k2"
+    },
+    "Phone": {
+      "name": "Phone",
+      "value": "+7 (906) 230-20-22"
+    },
+    "E-Mail": {
+      "name": "E-Mail",
+      "value": "salon@koenigroom.ru"
+    },
+    "WhatsApp": {
+      "name": "WhatsApp",
+      "value": "7 (906) 230-20-22"
+    },
+    "Instagram": {
+      "name": "Instagram",
+      "value": "koenigroom"
+    },
+    "social": {
+      "label": "Social Media",
+      "icon": "Share2",
+      "value": [
+        {
+          "platform": "Instagram",
+          "username": "koenigroom",
+          "link": "https://instagram.com/koenigroom"
+        },
+        {
+          "platform": "Facebook",
+          "username": "koenigroom",
+          "link": "https://facebook.com/koenigroom"
+        },
+        {
+          "platform": "Linkedin",
+          "username": "koenigroom",
+          "link": "https://linkedin.com/company/koenigroom"
+        },
+        {
+          "platform": "MessageCircle",
+          "username": "WhatsApp",
+          "link": "https://wa.me/79062302022"
+        }
+      ]
+    }
+  },
+  "cart": {
+    "basket": "Basket",
+    "clearCart": "Clear Cart",
+    "freeShipping": "Your free shipping right has been applied to your cart",
+    "continueShopping": "Continue Shopping",
+    "campaigns": "Campaigns",
+    "orderSummary": "Order Summary",
+    "basketAmount": "Basket amount",
+    "shippingCost": "Shipping cost",
+    "free": "Free",
+    "discount": "Discount",
+    "totalAmount": "Total amount",
+    "completeShopping": "Complete Shopping",
+    "redeemGiftVoucher": "Redeem Gift Voucher",
+    "lastViewed": "Last | Viewed",
+    "addToBasket": "Add to Basket",
+    "inBasket": "In Basket",
+    "piece": "Piece",
+    "yourCustomizations": "Your Customizations",
+    "quantity": "Quantity",
+    "secondProductDiscount": "2nd Product 10% Discount",
+    "allBankTransferDiscount": "All BANK TRANSFER Orders 5% Discount",
+    "order": {
+      "orderNow": "Order Now",
+      "newOrder": "🛒 New Order",
+      "name": "Name",
+      "phone": "Phone",
+      "address": "Address",
+      "cart": "Cart",
+      "subtotal": "Subtotal",
+      "discount": "Discount",
+      "total": "Total",
+      "stock": "Stock",
+      "enterDetails": "Enter your details",
+      "fillAllFields": "Please fill all fields",
+      "sending": "Sending...",
+      "success": "Order sent successfully! ✅",
+      "error": "Error sending order ❌",
+      "confirm": "Confirm",
+      "cancel": "Cancel"
+    }
+  },
+  "searchComp": {
+    "placeholder": "Search for rugs...",
+    "colors": "Colors",
+    "searching": "Searching...",
+    "unnamedProduct": "Unnamed Product",
+    "noProducts": "No products found for \"{query}\"",
+    "tryDifferent": "Try a different search term",
+    "startTyping": "Start typing to search products"
+  }
+}
