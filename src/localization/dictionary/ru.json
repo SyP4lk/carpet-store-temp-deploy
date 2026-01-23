@@ -471,7 +471,24 @@
       {
         "title": "Отзыв",
         "path": "/feedback"
+      },
+      {
+        "title": "Виртуальная примерка",
+        "path": "/vr"
+      },
+      {
+        "title": "Ателье",
+        "path": "/atelier"
+      },
+      {
+        "title": "Дизайнерам",
+        "path": "/designer"
+      },
+      {
+        "title": "Демонстрация",
+        "path": "/demonstration"
       }
+
     ]
   },
   "contacts": {

@@ -471,7 +471,24 @@
       {
         "title": "Feedback",
         "path": "/feedback"
+      },
+      {
+        "title": "Virtual try-on",
+        "path": "/vr"
+      },
+      {
+        "title": "Atelier",
+        "path": "/atelier"
+      },
+      {
+        "title": "For designers",
+        "path": "/designer"
+      },
+      {
+        "title": "Demonstration",
+        "path": "/demonstration"
       }
+
     ]
   },
   "contacts": {

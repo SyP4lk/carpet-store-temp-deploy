@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
 import data from "@/context/data.json";
+import { localeConfig } from "@/localization/config";
 
 function formatDate(date: Date): string {
   return date.toISOString().split("T")[0];
@@ -7,40 +8,49 @@ function formatDate(date: Date): string {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://www.koenigcarpet.ru";
+  const lastModified = formatDate(new Date());
 
-  const products = (data as any[]).map((product) => {
-    const id = product.id;
-    return {
-      url: `${baseUrl}/en/rugs/${id}`,
-      lastModified: formatDate(new Date()),
-      changeFrequency: "weekly" as const,
-      priority: 0.9,
-      alternates: {
-        languages: {
-          en: `${baseUrl}/en/rugs/${id}`,
-          ru: `${baseUrl}/ru/rugs/${id}`,
-          tr: `${baseUrl}/tr/rugs/${id}`,
-        },
-      },
-      images: product.images,
-    };
-  });
-
-  const staticPages: MetadataRoute.Sitemap = [
-    {
-      url: `${baseUrl}/`,
-      lastModified: formatDate(new Date()),
-      changeFrequency: "daily" as const,
-      priority: 1,
-      alternates: {
-        languages: {
-          en: `${baseUrl}/en`,
-          ru: `${baseUrl}/ru`,
-          tr: `${baseUrl}/tr`,
-        },
-      },
-    },
+  const staticSlugs = [
+    "", // home
+    "about",
+    "contact",
+    "delivery-return",
+    "faq",
+    "our-projects",
+    "feedback",
+    "rugs",
+    "atelier",
+    "vr",
+    "designer",
+    "demonstration",
   ];
+
+  const staticPages: MetadataRoute.Sitemap = [];
+
+  for (const locale of localeConfig.locales) {
+    for (const slug of staticSlugs) {
+      const url = slug
+        ? `${baseUrl}/${locale}/${slug}`
+        : `${baseUrl}/${locale}`;
+
+      staticPages.push({
+        url,
+        lastModified,
+        changeFrequency: "weekly",
+        priority: slug === "" ? 1 : 0.7,
+      });
+    }
+  }
+
+  const products: MetadataRoute.Sitemap = (data as any[]).flatMap((product) => {
+    const id = product.id;
+    return localeConfig.locales.map((locale) => ({
+      url: `${baseUrl}/${locale}/rugs/${id}`,
+      lastModified,
+      changeFrequency: "weekly",
+      priority: 0.9,
+    }));
+  });
 
   return [...staticPages, ...products];
 }

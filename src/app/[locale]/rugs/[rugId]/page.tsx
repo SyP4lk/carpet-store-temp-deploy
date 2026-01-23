@@ -228,10 +228,11 @@ export async function generateMetadata({
   };
 }
 
-export const generateStaticParams = async () => {
-  const products = await getAllProducts();
-  return products.map((rug) => ({ rugId: rug.id.toString() }));
-};
+export async function generateStaticParams() {
+  // Не генерируем все товары на build - каталог большой и сборка становится очень долгой.
+  // Страницы будут генерироваться по запросу и кешироваться (ISR).
+  return [];
+}
 
 // Allow dynamic params - новые товары будут генерироваться on-demand
 export const dynamicParams = true;
