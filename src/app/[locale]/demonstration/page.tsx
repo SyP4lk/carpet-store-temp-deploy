@@ -11,8 +11,19 @@ export default function DemonstrationPage({ params }: Props) {
   const isRu = locale === "ru";
 
   const steps = isRu
-    ? ["Оставляете заявку", "Согласуем время и подбор", "Привозим варианты", "Вы выбираете дома"]
-    : ["Send a request", "Confirm time and selection", "We bring options", "You choose at home"];
+    ? [
+        "Выбираете ковёр из наличия в каталоге",
+        "Смотрите, как он будет выглядеть в интерьере на странице примерки",
+        "Если подходит - оставляете заявку на демонстрацию дома",
+        "Согласуем время и привезем несколько вариантов для сравнения",
+      ]
+    : [
+        "Choose an in-stock rug in the catalog",
+        "See how it looks in your interior on the fitting page",
+        "If it fits - submit a request for a home demo",
+        "We confirm the time and bring several options to compare",
+      ];
+  const stepLabel = isRu ? "Шаг" : "Step";
 
   const bring = isRu
     ? [
@@ -47,7 +58,7 @@ export default function DemonstrationPage({ params }: Props) {
               <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3">
                 {steps.map((s, i) => (
                   <div key={i} className="bg-white border border-gray-200 rounded-xl p-4">
-                    <p className="text-xs font-semibold text-gray-500">Step {i + 1}</p>
+                    <p className="text-xs font-semibold text-gray-500">{stepLabel} {i + 1}</p>
                     <p className="mt-1 font-semibold">{s}</p>
                   </div>
                 ))}
