@@ -1,9 +1,12 @@
 import { prisma } from './prisma'
+import { resolveCatalogSource } from './bmhomeSync'
 import { RugProduct } from '@/types/product'
 
 export async function getAllProducts(): Promise<RugProduct[]> {
+  const { where: sourceWhere } = await resolveCatalogSource()
   const products = await prisma.product.findMany({
     where: {
+      ...(sourceWhere ?? {}),
       // Исключаем товары без цены
       price: {
         not: ''
@@ -68,7 +71,11 @@ export async function getProductsByFilter(filter: {
   style?: string
   color?: string
 }): Promise<RugProduct[]> {
-  const where: any = {}
+  const { where: sourceWhere } = await resolveCatalogSource()
+  const where: any = {
+    ...(sourceWhere ?? {}),
+    price: { not: '' },
+  }
 
   if (filter.inStock !== undefined) where.inStock = filter.inStock
   if (filter.isNew !== undefined) where.isNew = filter.isNew
@@ -110,7 +117,12 @@ export async function getProductsByFilter(filter: {
     },
   })
 
-  return products.map(transformProduct)
+  return products
+    .map(transformProduct)
+    .filter(product => {
+      const price = parseFloat(product.price.replace(/,/g, '') || '0');
+      return price > 0;
+    });
 }
 
 function transformProduct(product: any): RugProduct {

@@ -1,0 +1,3 @@
+# Run weekly on Sunday at 03:00
+0 3 * * 0 cd /var/www/carpet-store && /usr/bin/npm run sync:bmhome >> /var/www/carpet-store/sync_reports/cron.log 2>&1
+

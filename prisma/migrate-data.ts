@@ -42,6 +42,7 @@ async function migrateData() {
           isNew: item.isNew || false,
           isRunners: item.isRunners || false,
           inStock: item.inStock || false,
+          source: 'DEFAULT',
         },
         create: {
           productCode: item.product_code,
@@ -51,6 +52,7 @@ async function migrateData() {
           isNew: item.isNew || false,
           isRunners: item.isRunners || false,
           inStock: item.inStock || false,
+          source: 'DEFAULT',
           productNames: {
             create: [
               { locale: 'en', name: item.product_name.en },

@@ -1,0 +1,52 @@
+{
+  "requestsFinished": 0,
+  "requestsFailed": 3,
+  "requestsRetries": 3,
+  "requestsFailedPerMinute": 44,
+  "requestsFinishedPerMinute": 0,
+  "requestMinDurationMillis": null,
+  "requestMaxDurationMillis": 0,
+  "requestTotalFailedDurationMillis": 325,
+  "requestTotalFinishedDurationMillis": 0,
+  "crawlerStartedAt": "2026-01-30T03:39:46.769Z",
+  "crawlerFinishedAt": "2026-01-30T03:39:50.800Z",
+  "statsPersistedAt": "2026-01-30T03:39:50.800Z",
+  "crawlerRuntimeMillis": 4051,
+  "crawlerLastStartTimestamp": 1769744386749,
+  "requestRetryHistogram": [
+    null,
+    null,
+    null,
+    3
+  ],
+  "statsId": 0,
+  "requestAvgFailedDurationMillis": 108,
+  "requestAvgFinishedDurationMillis": null,
+  "requestTotalDurationMillis": 325,
+  "requestsTotal": 3,
+  "requestsWithStatusCode": {
+    "403": 12
+  },
+  "errors": {
+    "C:\\Users\\Данил\\Desktop\\work\\next\\-carpet-store\\node_modules\\@crawlee\\src\\internals\\basic-crawler.ts:1353:19": {
+      "missing error code": {
+        "Error": {
+          "Request blocked - received 403 status code.": {
+            "count": 3
+          }
+        }
+      }
+    }
+  },
+  "retryErrors": {
+    "C:\\Users\\Данил\\Desktop\\work\\next\\-carpet-store\\node_modules\\@crawlee\\src\\internals\\basic-crawler.ts:1353:19": {
+      "missing error code": {
+        "Error": {
+          "Request blocked - received 403 status code.": {
+            "count": 9
+          }
+        }
+      }
+    }
+  }
+}

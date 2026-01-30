@@ -267,14 +267,6 @@
         "path": "/new-rugs"
       },
       {
-        "title": "Дорожки",
-        "path": "/runners"
-      },
-      {
-        "title": "Наши проекты",
-        "path": "/our-projects"
-      },
-      {
         "title": "Коллекция",
         "children": [
           {
@@ -461,35 +453,48 @@
         "path": "/style"
       },
       {
-        "title": "Контакты",
-        "path": "/contact"
-      },
-      {
-        "title": "Вопрос-ответ",
-        "path": "/faq"
-      },
-      {
-        "title": "Отзыв",
-        "path": "/feedback"
+        "title": "Дорожки",
+        "path": "/runners"
       },
       {
         "title": "Виртуальная примерка",
         "path": "/vr"
       },
       {
-        "title": "Ателье",
+        "title": "Ковры на заказ",
         "path": "/atelier"
+      },
+      {
+        "title": "Демонстрация",
+        "path": "/demonstration"
       },
       {
         "title": "Дизайнерам",
         "path": "/designer"
       },
       {
-        "title": "Демонстрация",
-        "path": "/demonstration"
+        "title": "Вопрос - ответ",
+        "path": "/faq"
+      },
+      {
+        "title": "Наши проекты",
+        "path": "/our-projects"
+      },
+      {
+        "title": "Отзывы",
+        "path": "/feedback"
+      },
+      {
+        "title": "Контакты",
+        "path": "/contact"
       }
-
-    ]
+    ],
+    "contacts": {
+      "phone": "+7 (906) 230-20-22",
+      "email": "salon@koenigroom.ru",
+      "whatsapp": "https://wa.me/79062302022",
+      "telegram": "https://t.me/koenigroom"
+    }
   },
   "contacts": {
     "Address": {

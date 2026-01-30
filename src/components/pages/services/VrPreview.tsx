@@ -40,7 +40,7 @@ export default function VrPreview() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
         <div className="lg:col-span-2 p-5">
-          <div className="aspect-video rounded-xl border border-dashed border-gray-300 bg-gray-50 overflow-hidden flex items-center justify-center relative">
+          <div className="min-h-[320px] sm:min-h-[380px] md:min-h-[460px] lg:min-h-[520px] rounded-xl border border-dashed border-gray-300 bg-gray-50 overflow-hidden flex items-center justify-center relative">
             {photoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={photoUrl} alt="room" className="absolute inset-0 w-full h-full object-cover" />

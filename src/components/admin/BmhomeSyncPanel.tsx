@@ -1,0 +1,323 @@
+'use client'
+
+import { useCallback, useEffect, useMemo, useState } from 'react'
+
+type SyncSettings = {
+  catalogMode: 'AUTO' | 'DEFAULT_ONLY' | 'BMHOME_ONLY' | 'MERGE'
+  autoFallbackMinCount: number
+}
+
+type SyncRun = {
+  id: number
+  status: 'RUNNING' | 'SUCCESS' | 'NEED_AUTH' | 'FAILED'
+  startedAt: string
+  finishedAt?: string | null
+  productsFound: number
+  productsParsed: number
+  created: number
+  updated: number
+  unchanged: number
+  hiddenNoPrice: number
+  hiddenZeroPrice: number
+  errorsCount: number
+  summaryRu?: string | null
+  hintRu?: string | null
+}
+
+type StatusResponse = {
+  settings: SyncSettings
+  bmhomeCount: number
+  resolvedSource: 'DEFAULT' | 'BMHOME' | 'MERGE'
+  lastRun?: SyncRun | null
+  eurToRubRate: number
+  warningRu?: string | null
+}
+
+const statusLabels: Record<SyncRun['status'], string> = {
+  RUNNING: 'В процессе',
+  SUCCESS: 'Успешно',
+  NEED_AUTH: 'Нужно подтверждение',
+  FAILED: 'Ошибка',
+}
+
+const statusColors: Record<SyncRun['status'], string> = {
+  RUNNING: 'text-blue-600',
+  SUCCESS: 'text-green-600',
+  NEED_AUTH: 'text-amber-600',
+  FAILED: 'text-red-600',
+}
+
+const catalogModeLabels: Record<SyncSettings['catalogMode'], string> = {
+  AUTO: 'AUTO',
+  DEFAULT_ONLY: 'Только дефолтные',
+  BMHOME_ONLY: 'Только BMHOME',
+  MERGE: 'Вместе',
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return '—'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString('ru-RU')
+}
+
+export default function BmhomeSyncPanel() {
+  const [status, setStatus] = useState<StatusResponse | null>(null)
+  const [runs, setRuns] = useState<SyncRun[]>([])
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [running, setRunning] = useState(false)
+  const [starting, setStarting] = useState(false)
+  const [settingsDraft, setSettingsDraft] = useState<SyncSettings | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const loadStatus = useCallback(async () => {
+    const response = await fetch('/api/admin/bmhome-sync/status', { cache: 'no-store' })
+    if (!response.ok) {
+      throw new Error('Не удалось загрузить статус синхронизации')
+    }
+    const data = (await response.json()) as StatusResponse
+    setStatus(data)
+    setSettingsDraft(data.settings)
+    setRunning(data.lastRun?.status === 'RUNNING')
+  }, [])
+
+  const loadRuns = useCallback(async () => {
+    const response = await fetch('/api/admin/bmhome-sync/runs', { cache: 'no-store' })
+    if (!response.ok) {
+      throw new Error('Не удалось загрузить историю запусков')
+    }
+    const data = await response.json()
+    setRuns(data.runs ?? [])
+  }, [])
+
+  const reloadAll = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      await Promise.all([loadStatus(), loadRuns()])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка загрузки данных')
+    } finally {
+      setLoading(false)
+    }
+  }, [loadStatus, loadRuns])
+
+  useEffect(() => {
+    reloadAll()
+  }, [reloadAll])
+
+  const startSync = async () => {
+    try {
+      setStarting(true)
+      const response = await fetch('/api/admin/bmhome-sync/run', { method: 'POST' })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data?.error || 'Не удалось запустить синк')
+      }
+      await reloadAll()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка запуска синка')
+    } finally {
+      setStarting(false)
+    }
+  }
+
+  const saveSettings = async () => {
+    if (!settingsDraft) return
+    try {
+      setSaving(true)
+      const response = await fetch('/api/admin/bmhome-sync/status', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settingsDraft),
+      })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data?.error || 'Не удалось сохранить настройки')
+      }
+      await reloadAll()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка сохранения настроек')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const lastRun = status?.lastRun
+  const resolvedSourceLabel = useMemo(() => {
+    if (!status) return '—'
+    if (status.resolvedSource === 'MERGE') return 'Дефолтные + BMHOME'
+    if (status.resolvedSource === 'DEFAULT') return 'Дефолтные'
+    return 'BMHOME'
+  }, [status])
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg shadow p-6 space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">BMHOME синхронизация</h2>
+            <p className="text-sm text-gray-500">Админская проверка и запуск синка каталога.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href="/admin/bmhome-browser/"
+              target="_blank"
+              rel="noreferrer"
+              className="px-4 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              Открыть окно проверки BMHOME
+            </a>
+            <button
+              onClick={startSync}
+              disabled={running || starting}
+              className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            >
+              {running || starting ? 'Синхронизация запущена...' : 'Запустить синхронизацию'}
+            </button>
+            <button
+              onClick={reloadAll}
+              disabled={loading}
+              className="px-4 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            >
+              Обновить
+            </button>
+          </div>
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-md px-4 py-2">
+            {error}
+          </div>
+        )}
+
+        {status?.warningRu && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-700 text-sm rounded-md px-4 py-2">
+            {status.warningRu}
+          </div>
+        )}
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="border rounded-md p-4">
+            <p className="text-xs uppercase text-gray-400">Последний запуск</p>
+            <p className={`text-lg font-semibold ${lastRun ? statusColors[lastRun.status] : 'text-gray-700'}`}>
+              {lastRun ? statusLabels[lastRun.status] : 'Нет данных'}
+            </p>
+            <p className="text-sm text-gray-500 mt-1">Старт: {formatDate(lastRun?.startedAt)}</p>
+            <p className="text-sm text-gray-500">Финиш: {formatDate(lastRun?.finishedAt)}</p>
+          </div>
+          <div className="border rounded-md p-4">
+            <p className="text-xs uppercase text-gray-400">Каталог сейчас</p>
+            <p className="text-lg font-semibold text-gray-900">{resolvedSourceLabel}</p>
+            <p className="text-sm text-gray-500 mt-1">BMHOME товаров: {status?.bmhomeCount ?? 0}</p>
+            <p className="text-sm text-gray-500">Курс EUR → RUB: {status ? status.eurToRubRate.toFixed(2) : '—'}</p>
+          </div>
+          <div className="border rounded-md p-4">
+            <p className="text-xs uppercase text-gray-400">Итог</p>
+            <p className="text-sm text-gray-700">{lastRun?.summaryRu || '—'}</p>
+            {lastRun?.hintRu && <p className="text-sm text-gray-500 mt-1">{lastRun.hintRu}</p>}
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-6 space-y-4">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">Режим показа каталога</h3>
+          <p className="text-sm text-gray-500">
+            AUTO: если товаров BMHOME пока нет или 0, сайт показывает дефолтный каталог, чтобы витрина не была пустой.
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="text-sm text-gray-700">
+            Показывать товары
+            <select
+              value={settingsDraft?.catalogMode ?? 'AUTO'}
+              onChange={(event) =>
+                setSettingsDraft((prev) =>
+                  prev
+                    ? { ...prev, catalogMode: event.target.value as SyncSettings['catalogMode'] }
+                    : prev
+                )
+              }
+              className="mt-2 w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            >
+              {Object.entries(catalogModeLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-sm text-gray-700">
+            Минимум товаров для AUTO
+            <input
+              type="number"
+              min={1}
+              value={settingsDraft?.autoFallbackMinCount ?? 1}
+              onChange={(event) =>
+                setSettingsDraft((prev) =>
+                  prev ? { ...prev, autoFallbackMinCount: Number(event.target.value) } : prev
+                )
+              }
+              className="mt-2 w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            />
+          </label>
+        </div>
+        <div className="flex justify-end">
+          <button
+            onClick={saveSettings}
+            disabled={saving}
+            className="px-4 py-2 rounded-md bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-50"
+          >
+            {saving ? 'Сохранение...' : 'Сохранить настройки'}
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">История запусков</h3>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="text-left text-gray-500 border-b">
+                <th className="py-2 pr-4">ID</th>
+                <th className="py-2 pr-4">Старт</th>
+                <th className="py-2 pr-4">Статус</th>
+                <th className="py-2 pr-4">Создано/Обновлено</th>
+                <th className="py-2 pr-4">Скрыто</th>
+                <th className="py-2 pr-4">Ошибки</th>
+                <th className="py-2 pr-4">Комментарий</th>
+              </tr>
+            </thead>
+            <tbody>
+              {runs.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="py-4 text-gray-500">
+                    Запусков пока нет.
+                  </td>
+                </tr>
+              )}
+              {runs.map((run) => (
+                <tr key={run.id} className="border-b">
+                  <td className="py-2 pr-4 text-gray-700">{run.id}</td>
+                  <td className="py-2 pr-4 text-gray-700">{formatDate(run.startedAt)}</td>
+                  <td className={`py-2 pr-4 font-medium ${statusColors[run.status]}`}>
+                    {statusLabels[run.status]}
+                  </td>
+                  <td className="py-2 pr-4 text-gray-700">
+                    {run.created}/{run.updated}
+                  </td>
+                  <td className="py-2 pr-4 text-gray-700">
+                    {run.hiddenNoPrice + run.hiddenZeroPrice}
+                  </td>
+                  <td className="py-2 pr-4 text-gray-700">{run.errorsCount}</td>
+                  <td className="py-2 pr-4 text-gray-600">{run.summaryRu || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}

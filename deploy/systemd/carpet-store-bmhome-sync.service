@@ -1,0 +1,11 @@
+[Unit]
+Description=Carpet Store BMHOME sync
+After=network.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/var/www/carpet-store
+ExecStart=/usr/bin/npm run sync:bmhome
+EnvironmentFile=/var/www/carpet-store/.env
+User=root
+

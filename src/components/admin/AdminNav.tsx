@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -17,8 +17,9 @@ interface AdminNavProps {
 }
 
 const navigation = [
-  { name: 'Дашборд', href: '/admin/dashboard' },
-  { name: 'Товары', href: '/admin/products' },
+  { name: 'Р”Р°С€Р±РѕСЂРґ', href: '/admin/dashboard' },
+  { name: 'РўРѕРІР°СЂС‹', href: '/admin/products' },
+  { name: 'BMHOME синхронизация', href: '/admin/bmhome-sync' },
 ]
 
 export default function AdminNav({ user }: AdminNavProps) {
@@ -31,7 +32,7 @@ export default function AdminNav({ user }: AdminNavProps) {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <h1 className="text-xl font-bold text-gray-900">
-                Koenig Carpet Админ
+                Koenig Carpet РђРґРјРёРЅ
               </h1>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -60,7 +61,7 @@ export default function AdminNav({ user }: AdminNavProps) {
                 onClick={() => signOut({ callbackUrl: '/admin/login' })}
                 className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700"
               >
-                Выйти
+                Р’С‹Р№С‚Рё
               </button>
             </div>
           </div>
@@ -69,3 +70,4 @@ export default function AdminNav({ user }: AdminNavProps) {
     </nav>
   )
 }
+

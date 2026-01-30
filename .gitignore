@@ -17,6 +17,8 @@ product_links.json
 products_data.json
 pyt.py
 .venv
+/sync_reports
+/.bmhome_profile
 
 # next.js
 /.next/

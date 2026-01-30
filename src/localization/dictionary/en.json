@@ -255,24 +255,16 @@
     "filterBy": "FILTER BY",
     "sideBarLinks": [
       {
-        "title": "All Rugs",
+        "title": "All rugs",
         "path": "/all-rugs"
       },
       {
-        "title": "Rugs in Stock",
+        "title": "In-stock rugs",
         "path": "/rugs-in-stock"
       },
       {
-        "title": "New Rugs",
+        "title": "New rugs",
         "path": "/new-rugs"
-      },
-      {
-        "title": "Runners",
-        "path": "/runners"
-      },
-      {
-        "title": "Our Projects",
-        "path": "/our-projects"
       },
       {
         "title": "Collection",
@@ -461,35 +453,48 @@
         "path": "/style"
       },
       {
-        "title": "Contact",
-        "path": "/contact"
-      },
-      {
-        "title": "FAQ",
-        "path": "/faq"
-      },
-      {
-        "title": "Feedback",
-        "path": "/feedback"
+        "title": "Runners",
+        "path": "/runners"
       },
       {
         "title": "Virtual try-on",
         "path": "/vr"
       },
       {
-        "title": "Atelier",
+        "title": "Custom rugs",
         "path": "/atelier"
+      },
+      {
+        "title": "Home demo",
+        "path": "/demonstration"
       },
       {
         "title": "For designers",
         "path": "/designer"
       },
       {
-        "title": "Demonstration",
-        "path": "/demonstration"
+        "title": "FAQ",
+        "path": "/faq"
+      },
+      {
+        "title": "Our projects",
+        "path": "/our-projects"
+      },
+      {
+        "title": "Reviews",
+        "path": "/feedback"
+      },
+      {
+        "title": "Contacts",
+        "path": "/contact"
       }
-
-    ]
+    ],
+    "contacts": {
+      "phone": "+7 (906) 230-20-22",
+      "email": "salon@koenigroom.ru",
+      "whatsapp": "https://wa.me/79062302022",
+      "telegram": "https://t.me/koenigroom"
+    }
   },
   "contacts": {
     "Address": {
