@@ -1,4 +1,4 @@
-import { PrismaClient, ProductSource } from '@prisma/client'
+import { PrismaClient, Prisma, ProductSource } from '@prisma/client'
 import { load } from 'cheerio'
 import { createHash } from 'node:crypto'
 import 'dotenv/config'
@@ -256,7 +256,8 @@ async function main() {
       const updatedSourceMeta = {
         ...sourceMeta,
         bmhome: updatedBmhome,
-      }
+      } as Prisma.InputJsonValue
+
 
       await prisma.$transaction([
         prisma.product.update({
