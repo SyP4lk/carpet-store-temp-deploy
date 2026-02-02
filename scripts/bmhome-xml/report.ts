@@ -5,9 +5,12 @@ import os from 'node:os'
 export type SyncTotals = {
   productsFound: number
   productsParsed: number
+  variantsFound: number
+  variantsParsed: number
   created: number
   updated: number
   unchanged: number
+  deactivated: number
   hiddenNoPrice: number
   hiddenZeroPrice: number
   errorsCount: number
@@ -64,7 +67,7 @@ function formatLogTime(date: Date): string {
 
 function formatMarkdown(report: SyncReport): string {
   const lines: string[] = []
-  lines.push(`# BMHOME sync report`)
+  lines.push(`# BMHOME XML sync report`)
   lines.push('')
   lines.push(`Started: ${report.startedAt}`)
   lines.push(`Finished: ${report.finishedAt}`)
@@ -73,9 +76,12 @@ function formatMarkdown(report: SyncReport): string {
   lines.push('## Totals')
   lines.push(`- Products found: ${report.totals.productsFound}`)
   lines.push(`- Products parsed: ${report.totals.productsParsed}`)
+  lines.push(`- Variants found: ${report.totals.variantsFound}`)
+  lines.push(`- Variants parsed: ${report.totals.variantsParsed}`)
   lines.push(`- Created: ${report.totals.created}`)
   lines.push(`- Updated: ${report.totals.updated}`)
   lines.push(`- Unchanged: ${report.totals.unchanged}`)
+  lines.push(`- Deactivated: ${report.totals.deactivated}`)
   lines.push(`- Hidden (no price): ${report.totals.hiddenNoPrice}`)
   lines.push(`- Hidden (zero/negative): ${report.totals.hiddenZeroPrice}`)
   lines.push(`- Errors: ${report.totals.errorsCount}`)

@@ -36,7 +36,7 @@ export async function POST() {
   const run = await prisma.bmhomeSyncRun.create({
     data: {
       status: BmhomeSyncStatus.RUNNING,
-      summaryRu: 'Синхронизация запущена из админки.',
+      summaryRu: 'XML синхронизация запущена из админки.',
     },
   })
 

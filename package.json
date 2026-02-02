@@ -10,8 +10,8 @@
     "db:push": "prisma db push",
     "db:migrate": "tsx prisma/migrate-data.ts",
     "postinstall": "prisma generate",
-    "sync:bmhome": "tsx scripts/bmhome-sync.ts",
-    "sync:bmhome:dry": "tsx scripts/bmhome-sync.ts --dry-run"
+    "sync:bmhome": "tsx scripts/bmhome-xml-sync.ts",
+    "sync:bmhome:dry": "tsx scripts/bmhome-xml-sync.ts --dry-run"
   },
   "dependencies": {
     "@formatjs/intl-localematcher": "^0.6.1",
@@ -21,7 +21,6 @@
     "bcryptjs": "^3.0.2",
     "cheerio": "^1.2.0",
     "clsx": "^2.1.1",
-    "crawlee": "^3.15.3",
     "lucide-react": "^0.539.0",
     "negotiator": "^1.0.0",
     "next": "^15.5.7",
@@ -35,9 +34,11 @@
     "react-yandex-metrika": "^2.6.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
+    "sax": "^1.4.1",
     "xlsx": "^0.18.5",
     "zod": "^4.0.17",
-    "zustand": "^5.0.7"
+    "zustand": "^5.0.7",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -48,6 +49,7 @@
     "@types/nprogress": "^0.2.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sax": "^1.2.7",
     "eslint": "^9",
     "eslint-config-next": "15.4.6",
     "prisma": "^6.16.3",

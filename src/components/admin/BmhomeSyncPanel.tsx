@@ -5,6 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 type SyncSettings = {
   catalogMode: 'AUTO' | 'DEFAULT_ONLY' | 'BMHOME_ONLY' | 'MERGE'
   autoFallbackMinCount: number
+  feedUrl: string
+  usdToEurRate: number
 }
 
 type SyncRun = {
@@ -14,14 +16,20 @@ type SyncRun = {
   finishedAt?: string | null
   productsFound: number
   productsParsed: number
+  variantsFound: number
+  variantsParsed: number
   created: number
   updated: number
   unchanged: number
+  deactivated: number
   hiddenNoPrice: number
   hiddenZeroPrice: number
   errorsCount: number
   summaryRu?: string | null
   hintRu?: string | null
+  reportDir?: string | null
+  reportJsonPath?: string | null
+  reportMdPath?: string | null
 }
 
 type StatusResponse = {
@@ -112,11 +120,11 @@ export default function BmhomeSyncPanel() {
       const response = await fetch('/api/admin/bmhome-sync/run', { method: 'POST' })
       if (!response.ok) {
         const data = await response.json().catch(() => ({}))
-        throw new Error(data?.error || 'Не удалось запустить синк')
+        throw new Error(data?.error || 'Не удалось запустить синхронизацию')
       }
       await reloadAll()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка запуска синка')
+      setError(err instanceof Error ? err.message : 'Ошибка запуска синхронизации')
     } finally {
       setStarting(false)
     }
@@ -151,29 +159,26 @@ export default function BmhomeSyncPanel() {
     return 'BMHOME'
   }, [status])
 
+  const makeReportLink = (runId: number, type: 'md' | 'json' | 'log') =>
+    `/api/admin/bmhome-sync/report?runId=${runId}&type=${type}`
+
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow p-6 space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">BMHOME синхронизация</h2>
-            <p className="text-sm text-gray-500">Админская проверка и запуск синка каталога.</p>
+            <h2 className="text-xl font-semibold text-gray-900">BMHOME XML синхронизация</h2>
+            <p className="text-sm text-gray-500">
+              Синхронизация каталога из официального Ticimax XML фида.
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <a
-              href="/admin/bmhome-browser/"
-              target="_blank"
-              rel="noreferrer"
-              className="px-4 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              Открыть окно проверки BMHOME
-            </a>
             <button
               onClick={startSync}
               disabled={running || starting}
               className="px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
             >
-              {running || starting ? 'Синхронизация запущена...' : 'Запустить синхронизацию'}
+              {running || starting ? 'Синхронизация запущена...' : 'Run sync now'}
             </button>
             <button
               onClick={reloadAll}
@@ -199,7 +204,7 @@ export default function BmhomeSyncPanel() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="border rounded-md p-4">
-            <p className="text-xs uppercase text-gray-400">Последний запуск</p>
+            <p className="text-xs uppercase text-gray-400">Статус</p>
             <p className={`text-lg font-semibold ${lastRun ? statusColors[lastRun.status] : 'text-gray-700'}`}>
               {lastRun ? statusLabels[lastRun.status] : 'Нет данных'}
             </p>
@@ -218,14 +223,72 @@ export default function BmhomeSyncPanel() {
             {lastRun?.hintRu && <p className="text-sm text-gray-500 mt-1">{lastRun.hintRu}</p>}
           </div>
         </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="border rounded-md p-4">
+            <p className="text-xs uppercase text-gray-400">Товары</p>
+            <p className="text-lg font-semibold text-gray-900">{lastRun?.productsParsed ?? 0}</p>
+            <p className="text-sm text-gray-500">Найдено: {lastRun?.productsFound ?? 0}</p>
+          </div>
+          <div className="border rounded-md p-4">
+            <p className="text-xs uppercase text-gray-400">Варианты</p>
+            <p className="text-lg font-semibold text-gray-900">{lastRun?.variantsParsed ?? 0}</p>
+            <p className="text-sm text-gray-500">Найдено: {lastRun?.variantsFound ?? 0}</p>
+          </div>
+          <div className="border rounded-md p-4">
+            <p className="text-xs uppercase text-gray-400">Изменения</p>
+            <p className="text-lg font-semibold text-gray-900">
+              {lastRun ? `${lastRun.created}/${lastRun.updated}` : '0/0'}
+            </p>
+            <p className="text-sm text-gray-500">Деактивировано: {lastRun?.deactivated ?? 0}</p>
+          </div>
+          <div className="border rounded-md p-4">
+            <p className="text-xs uppercase text-gray-400">Скрыто</p>
+            <p className="text-lg font-semibold text-gray-900">
+              {lastRun ? lastRun.hiddenNoPrice + lastRun.hiddenZeroPrice : 0}
+            </p>
+            <p className="text-sm text-gray-500">Ошибки: {lastRun?.errorsCount ?? 0}</p>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow p-6 space-y-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Режим показа каталога</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Настройки</h3>
           <p className="text-sm text-gray-500">
-            AUTO: если товаров BMHOME пока нет или 0, сайт показывает дефолтный каталог, чтобы витрина не была пустой.
+            URL XML фида и режим показа каталога.
           </p>
+          <p className="text-sm text-gray-500 mt-1">
+            AUTO: если товаров BMHOME меньше autoFallbackMinCount, витрина показывает дефолтный каталог.
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="text-sm text-gray-700">
+            Feed URL
+            <input
+              type="url"
+              value={settingsDraft?.feedUrl ?? ''}
+              onChange={(event) =>
+                setSettingsDraft((prev) => (prev ? { ...prev, feedUrl: event.target.value } : prev))
+              }
+              className="mt-2 w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            />
+          </label>
+          <label className="text-sm text-gray-700">
+            USD → EUR (rate)
+            <input
+              type="number"
+              min={0}
+              step={0.0001}
+              value={settingsDraft?.usdToEurRate ?? 1}
+              onChange={(event) =>
+                setSettingsDraft((prev) =>
+                  prev ? { ...prev, usdToEurRate: Number(event.target.value) } : prev
+                )
+              }
+              className="mt-2 w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            />
+          </label>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="text-sm text-gray-700">
@@ -283,16 +346,17 @@ export default function BmhomeSyncPanel() {
                 <th className="py-2 pr-4">ID</th>
                 <th className="py-2 pr-4">Старт</th>
                 <th className="py-2 pr-4">Статус</th>
-                <th className="py-2 pr-4">Создано/Обновлено</th>
-                <th className="py-2 pr-4">Скрыто</th>
+                <th className="py-2 pr-4">Товары</th>
+                <th className="py-2 pr-4">Варианты</th>
+                <th className="py-2 pr-4">Создано/Обновлено/Деакт.</th>
                 <th className="py-2 pr-4">Ошибки</th>
-                <th className="py-2 pr-4">Комментарий</th>
+                <th className="py-2 pr-4">Отчет</th>
               </tr>
             </thead>
             <tbody>
               {runs.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-4 text-gray-500">
+                  <td colSpan={8} className="py-4 text-gray-500">
                     Запусков пока нет.
                   </td>
                 </tr>
@@ -305,13 +369,39 @@ export default function BmhomeSyncPanel() {
                     {statusLabels[run.status]}
                   </td>
                   <td className="py-2 pr-4 text-gray-700">
-                    {run.created}/{run.updated}
+                    {run.productsParsed}/{run.productsFound}
                   </td>
                   <td className="py-2 pr-4 text-gray-700">
-                    {run.hiddenNoPrice + run.hiddenZeroPrice}
+                    {run.variantsParsed}/{run.variantsFound}
+                  </td>
+                  <td className="py-2 pr-4 text-gray-700">
+                    {run.created}/{run.updated}/{run.deactivated}
                   </td>
                   <td className="py-2 pr-4 text-gray-700">{run.errorsCount}</td>
-                  <td className="py-2 pr-4 text-gray-600">{run.summaryRu || '—'}</td>
+                  <td className="py-2 pr-4 text-gray-600">
+                    {run.reportMdPath ? (
+                      <div className="flex gap-2">
+                        <a
+                          href={makeReportLink(run.id, 'md')}
+                          className="text-blue-600 hover:underline"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          report.md
+                        </a>
+                        <a
+                          href={makeReportLink(run.id, 'log')}
+                          className="text-blue-600 hover:underline"
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          run.log
+                        </a>
+                      </div>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

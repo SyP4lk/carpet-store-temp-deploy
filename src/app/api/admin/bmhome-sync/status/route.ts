@@ -34,9 +34,9 @@ export async function GET() {
     resolution.settings.catalogMode === CatalogMode.AUTO &&
     resolution.bmhomeCount < resolution.settings.autoFallbackMinCount
   ) {
-    if (lastRun?.status === BmhomeSyncStatus.NEED_AUTH || lastRun?.status === BmhomeSyncStatus.FAILED) {
+    if (lastRun?.status === BmhomeSyncStatus.FAILED) {
       warningRu =
-        'Синхронизация не смогла получить товары, сайт показывает дефолтный каталог. Нужно открыть окно проверки BMHOME.'
+        'Синхронизация не смогла получить товары, сайт показывает дефолтный каталог. Проверьте доступ к XML фиду и журнал запуска.'
     }
   }
 
@@ -57,6 +57,8 @@ export async function GET() {
 const settingsSchema = z.object({
   catalogMode: z.nativeEnum(CatalogMode),
   autoFallbackMinCount: z.number().int().min(1),
+  feedUrl: z.string().url(),
+  usdToEurRate: z.number().positive(),
 })
 
 export async function PUT(request: NextRequest) {
@@ -74,11 +76,15 @@ export async function PUT(request: NextRequest) {
       update: {
         catalogMode: validated.catalogMode,
         autoFallbackMinCount: validated.autoFallbackMinCount,
+        feedUrl: validated.feedUrl,
+        usdToEurRate: validated.usdToEurRate,
       },
       create: {
         id: 1,
         catalogMode: validated.catalogMode,
         autoFallbackMinCount: validated.autoFallbackMinCount,
+        feedUrl: validated.feedUrl,
+        usdToEurRate: validated.usdToEurRate,
       },
     })
 
