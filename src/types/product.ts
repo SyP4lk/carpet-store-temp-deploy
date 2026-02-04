@@ -58,12 +58,14 @@ export interface RugProduct {
       // добавили из sync:
       priceUsd?: number | null;
       priceEur?: number | null;
+      priceUsdRaw?: string | null;
       inStock?: boolean;
       isSpecialSize?: boolean;
 
       salePriceUsd?: number | null;
       discountPriceUsd?: number | null;
       currency?: string;
+      currencyName?: string;
     }>;
   };
 };

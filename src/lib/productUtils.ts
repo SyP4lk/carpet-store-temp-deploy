@@ -26,7 +26,7 @@ function resolvePreferredSize(rug: RugProduct, selectedSize?: string | null): st
   return firstSize?.trim() ?? null;
 }
 
-function getBmhomeVariant(rug: RugProduct, selectedSize?: string | null) {
+export function getBmhomeVariant(rug: RugProduct, selectedSize?: string | null) {
   const variants = rug.sourceMeta?.bmhome?.variants ?? [];
   if (!variants.length) return null;
 
@@ -38,6 +38,11 @@ function getBmhomeVariant(rug: RugProduct, selectedSize?: string | null) {
 
   const activeVariant = variants.find((variant) => variant.isActive !== false);
   return activeVariant ?? variants[0] ?? null;
+}
+
+export function isBmhomeSpecialSizeSelected(rug: RugProduct, selectedSize?: string | null): boolean {
+  const variant = getBmhomeVariant(rug, selectedSize);
+  return variant?.isSpecialSize === true;
 }
 
 export function getBmhomeStockCode(rug: RugProduct, selectedSize?: string | null): string {

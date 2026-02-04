@@ -19,6 +19,7 @@ type VariantRaw = {
   price?: string
   discountedPrice?: string
   currency?: string
+  currencyName?: string
   size?: string
 }
 
@@ -214,6 +215,17 @@ function normalizeSizeLabel(size: string): string {
   return `${match[1]} x ${match[2]} cm`
 }
 
+function normalizeKey(raw: string): string {
+  return raw
+    .trim()
+    .toUpperCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function normalizeSpecialSize(value: string): string {
   return value
     .normalize('NFKD')
@@ -226,8 +238,7 @@ function normalizeSpecialSize(value: string): string {
 
 function isSpecialSizeLabel(value?: string): boolean {
   if (!value) return false
-  const normalized = normalizeSpecialSize(value)
-  return normalized === 'ozel olcu' || normalized.includes('ozel olcu')
+  return normalizeKey(value) === 'OZEL OLCU'
 }
 
 function isSizeOptionName(value?: string): boolean {
@@ -321,8 +332,49 @@ function slugify(value: string): string {
     .replace(/[^\w\s-]/g, '')
     .trim()
     .toLowerCase()
-  const slug = normalized.replace(/[\s_]+/g, '-').replace(/-+/g, '-')
+  const slug = normalized.replace(/[\s-]+/g, '_').replace(/_+/g, '_')
   return slug || 'bmhome'
+}
+
+type BmhomeTaxonomyMappingEntry = {
+  by_raw?: Record<string, string>
+  by_norm?: Record<string, string>
+}
+
+type BmhomeTaxonomyMapping = Record<string, BmhomeTaxonomyMappingEntry>
+
+let bmhomeTaxonomyMappingCache: BmhomeTaxonomyMapping | null = null
+
+function loadBmhomeTaxonomyMapping(): BmhomeTaxonomyMapping {
+  if (bmhomeTaxonomyMappingCache) return bmhomeTaxonomyMappingCache
+  const mappingPath = path.resolve(process.cwd(), 'scripts/bmhome-xml/bmhome_taxonomy_mapping.json')
+  const raw = fs.readFileSync(mappingPath, 'utf8')
+  bmhomeTaxonomyMappingCache = JSON.parse(raw) as BmhomeTaxonomyMapping
+  return bmhomeTaxonomyMappingCache
+}
+
+function mapTaxonomyValue(
+  type: 'color' | 'style' | 'collection' | 'category_to_color',
+  raw: string
+): string | null {
+  const trimmed = raw.trim()
+  if (!trimmed) return null
+  const mapping = loadBmhomeTaxonomyMapping()
+  const normalized = normalizeKey(trimmed)
+  const typeKeys = [type]
+  if (type === 'category_to_color' && mapping.categoryTree_to_color) {
+    typeKeys.push('categoryTree_to_color')
+  }
+
+  for (const key of typeKeys) {
+    const entry = mapping[key]
+    const rawMatch = entry?.by_raw?.[trimmed]
+    if (rawMatch) return rawMatch
+    const normMatch = entry?.by_norm?.[normalized]
+    if (normMatch) return normMatch
+  }
+
+  return slugify(trimmed)
 }
 
 function getUsdToEurRate(value: number | null | undefined): number {
@@ -530,27 +582,48 @@ async function main() {
 
     const productActive = normalizeFlag(product.active)
 
+    const debugSku = process.env.BMHOME_DEBUG_SKU?.trim()
     const variantData = product.variants.map((variant) => {
       const discounted = normalizePriceWithMeta(variant.discountedPrice)
       const regular = normalizePriceWithMeta(variant.price)
       const salePriceUsd = regular.value && regular.value > 0 ? regular.value : null
       const discountPriceUsd = discounted.value && discounted.value > 0 ? discounted.value : null
-      const priceCandidates = [discountPriceUsd, salePriceUsd].filter(
-        (value): value is number => typeof value === 'number' && value > 0
-      )
-      const priceUsd = priceCandidates.length > 0 ? Math.min(...priceCandidates) : null
-      const priceEur = priceUsd && priceUsd > 0 ? Number((priceUsd * usdToEurRate).toFixed(2)) : null
       const sizeLabel = variant.size ? normalizeSizeLabel(variant.size) : undefined
       const sizeArea = sizeLabel ? parseSizeArea(sizeLabel) : 0
       const isActive = normalizeFlag(variant.active)
+      const isSpecialSize = isSpecialSizeLabel(sizeLabel || variant.size)
+      const priceUsdRaw =
+        discountPriceUsd && discountPriceUsd > 0 ? variant.discountedPrice ?? '' : variant.price ?? ''
+
+      let priceUsd: number | null = null
+      let priceEur: number | null = null
+      if (!isSpecialSize) {
+        priceUsd = discountPriceUsd && discountPriceUsd > 0 ? discountPriceUsd : salePriceUsd
+        priceEur = priceUsd && priceUsd > 0 ? Number((priceUsd * usdToEurRate).toFixed(2)) : null
+      }
+
+      const inStock = isActive && parseStockStatus(variant.stockStatus)
+
+      if (debugSku && variant.sku?.trim() === debugSku) {
+        reporter.log(
+          `BMHOME_DEBUG_SKU sku=${variant.sku || ''} productId=${productId} name=${product.name || ''} sizeLabel=${
+            sizeLabel || ''
+          } isSpecialSize=${isSpecialSize} priceUsdRaw=${priceUsdRaw} priceUsd=${priceUsd ?? ''} priceEur=${
+            priceEur ?? ''
+          } currency=${variant.currency || ''} ParaBirimi=${variant.currencyName || ''}`
+        )
+      }
+
       return {
         ...variant,
         priceUsd,
         priceEur,
+        priceUsdRaw,
         sizeLabel,
         sizeArea,
         isActive,
-        inStock: isActive && parseStockStatus(variant.stockStatus),
+        inStock,
+        isSpecialSize,
         salePriceUsd,
         discountPriceUsd,
       }
@@ -563,7 +636,7 @@ async function main() {
     const variantsForMeta = parsedVariants.length > 0 ? parsedVariants : variantData
 
     const variantsWithPrice = parsedVariants.filter(
-      (variant) => typeof variant.priceEur === 'number' && variant.priceEur > 0
+      (variant) => !variant.isSpecialSize && typeof variant.priceEur === 'number' && variant.priceEur > 0
     )
     const pickMinPrice = (variants: typeof parsedVariants) =>
       variants.reduce<typeof parsedVariants[number] | null>((best, current) => {
@@ -579,9 +652,7 @@ async function main() {
     const hasPositivePrice = variantsWithPrice.length > 0
     const hasActiveVariants = parsedVariants.length > 0
     const hasInStockVariant = parsedVariants.some((variant) => variant.inStock)
-    const hasSpecialSize = parsedVariants.some((variant) =>
-      isSpecialSizeLabel(variant.sizeLabel || variant.size)
-    )
+    const hasSpecialSize = parsedVariants.some((variant) => variant.isSpecialSize)
 
     const priceOnRequest =
       productActive && !hasPositivePrice && hasActiveVariants && hasInStockVariant && hasSpecialSize
@@ -590,7 +661,7 @@ async function main() {
     const sizes = sizeVariants.map((variant) => variant.sizeLabel as string)
     const uniqueSizes = Array.from(new Set(sizes))
 
-    const specialVariant = parsedVariants.find((variant) => isSpecialSizeLabel(variant.sizeLabel || variant.size))
+    const specialVariant = parsedVariants.find((variant) => variant.isSpecialSize)
     const defaultSize = baseVariant?.sizeLabel ?? specialVariant?.sizeLabel ?? uniqueSizes[0]
 
 
@@ -621,14 +692,33 @@ async function main() {
     const { care, technical } = extractFeatureLists(product.descriptionHtml || '')
 
     const detailMap = new Map<string, string>()
+    const detailListMap = new Map<string, string[]>()
     for (const detail of product.technicalDetails) {
-      if (!detail.key || !detail.value) continue
-      detailMap.set(detail.key.toUpperCase(), detail.value)
+      const key = detail.key?.trim()
+      const value = detail.value?.trim()
+      if (!key || !value) continue
+      const upperKey = key.toUpperCase()
+      detailMap.set(upperKey, value)
+      const list = detailListMap.get(upperKey) ?? []
+      list.push(value)
+      detailListMap.set(upperKey, list)
     }
 
-    const colorName = (product.category || '').trim() || (detailMap.get('COLOR') || '').trim()
-    const styleName = (detailMap.get('STYLE') || '').trim()
+    const categoryColorRaw = (product.category || '').trim()
+    const detailColorRaw = (detailMap.get('COLOR') || '').trim()
+    const colorName = categoryColorRaw || detailColorRaw
+    const colorValue = categoryColorRaw
+      ? mapTaxonomyValue('category_to_color', categoryColorRaw)
+      : detailColorRaw
+      ? mapTaxonomyValue('color', detailColorRaw)
+      : null
+
+    const styleCandidates = detailListMap.get('STYLE') ?? []
+    const styleName = styleCandidates.length > 0 ? styleCandidates[styleCandidates.length - 1].trim() : ''
+    const styleValue = styleName ? mapTaxonomyValue('style', styleName) : null
+
     const collectionName = (detailMap.get('COLLECTION') || '').trim()
+    const collectionValue = collectionName ? mapTaxonomyValue('collection', collectionName) : null
 
 
     // XML -> model mapping:
@@ -726,12 +816,14 @@ async function main() {
           // важно для фронта:
           priceUsd: variant.priceUsd,
           priceEur: variant.priceEur,
+          priceUsdRaw: variant.priceUsdRaw,
           inStock: variant.inStock,
-          isSpecialSize: isSpecialSizeLabel(variant.sizeLabel || variant.size),
+          isSpecialSize: variant.isSpecialSize,
 
           salePriceUsd: variant.salePriceUsd,
           discountPriceUsd: variant.discountPriceUsd,
           currency: variant.currency,
+          currencyName: variant.currencyName,
         })),
 
       },
@@ -816,9 +908,9 @@ async function main() {
               deleteMany: shouldUpdateTaxonomyRu ? {} : { locale: 'en' },
               create: colorName
                 ? [
-                    { locale: 'en', name: colorName, value: slugify(colorName) },
+                    { locale: 'en', name: colorName, value: colorValue || slugify(colorName) },
                     ...(shouldUpdateTaxonomyRu
-                      ? [{ locale: 'ru', name: colorName, value: slugify(colorName) }]
+                      ? [{ locale: 'ru', name: colorName, value: colorValue || slugify(colorName) }]
                       : []),
                   ]
                 : [],
@@ -827,9 +919,9 @@ async function main() {
               deleteMany: shouldUpdateTaxonomyRu ? {} : { locale: 'en' },
               create: collectionName
                 ? [
-                    { locale: 'en', name: collectionName, value: slugify(collectionName) },
+                    { locale: 'en', name: collectionName, value: collectionValue || slugify(collectionName) },
                     ...(shouldUpdateTaxonomyRu
-                      ? [{ locale: 'ru', name: collectionName, value: slugify(collectionName) }]
+                      ? [{ locale: 'ru', name: collectionName, value: collectionValue || slugify(collectionName) }]
                       : []),
                   ]
                 : [],
@@ -838,9 +930,9 @@ async function main() {
               deleteMany: shouldUpdateTaxonomyRu ? {} : { locale: 'en' },
               create: styleName
                 ? [
-                    { locale: 'en', name: styleName, value: slugify(styleName) },
+                    { locale: 'en', name: styleName, value: styleValue || slugify(styleName) },
                     ...(shouldUpdateTaxonomyRu
-                      ? [{ locale: 'ru', name: styleName, value: slugify(styleName) }]
+                      ? [{ locale: 'ru', name: styleName, value: styleValue || slugify(styleName) }]
                       : []),
                   ]
                 : [],
@@ -883,24 +975,24 @@ async function main() {
             colors: {
               create: colorName
                 ? [
-                    { locale: 'en', name: colorName, value: slugify(colorName) },
-                    { locale: 'ru', name: colorName, value: slugify(colorName) },
+                    { locale: 'en', name: colorName, value: colorValue || slugify(colorName) },
+                    { locale: 'ru', name: colorName, value: colorValue || slugify(colorName) },
                   ]
                 : [],
             },
             collections: {
               create: collectionName
                 ? [
-                    { locale: 'en', name: collectionName, value: slugify(collectionName) },
-                    { locale: 'ru', name: collectionName, value: slugify(collectionName) },
+                    { locale: 'en', name: collectionName, value: collectionValue || slugify(collectionName) },
+                    { locale: 'ru', name: collectionName, value: collectionValue || slugify(collectionName) },
                   ]
                 : [],
             },
             styles: {
               create: styleName
                 ? [
-                    { locale: 'en', name: styleName, value: slugify(styleName) },
-                    { locale: 'ru', name: styleName, value: slugify(styleName) },
+                    { locale: 'en', name: styleName, value: styleValue || slugify(styleName) },
+                    { locale: 'ru', name: styleName, value: styleValue || slugify(styleName) },
                   ]
                 : [],
             },
@@ -1088,6 +1180,7 @@ async function main() {
         if (name === 'SatisFiyati') currentVariant.price = value
         if (name === 'IndirimliFiyat') currentVariant.discountedPrice = value
         if (name === 'ParaBirimiKodu') currentVariant.currency = value
+        if (name === 'ParaBirimi') currentVariant.currencyName = value
 
         if (!currentDetail) {
           if (variantOptionNameTags.has(name)) {

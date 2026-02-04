@@ -136,6 +136,10 @@ function transformProduct(product: any): RugProduct {
   const getStyle = (locale: string) =>
     product.styles.find((s: any) => s.locale === locale)?.name || ''
 
+  const colorEn = product.colors.find((c: any) => c.locale === 'en') || product.colors[0]
+  const collectionEn = product.collections.find((c: any) => c.locale === 'en') || product.collections[0]
+  const styleEn = product.styles.find((s: any) => s.locale === 'en') || product.styles[0]
+
   return {
     id: product.id,
     product_code: product.productCode,
@@ -154,17 +158,17 @@ function transformProduct(product: any): RugProduct {
     color: {
       en: getColor('en'),
       ru: getColor('ru'),
-      value: product.colors[0]?.value || ''
+      value: colorEn?.value || ''
     },
     collection: {
       en: getCollection('en'),
       ru: getCollection('ru'),
-      value: product.collections[0]?.value || ''
+      value: collectionEn?.value || ''
     },
     style: {
       en: getStyle('en'),
       ru: getStyle('ru'),
-      value: product.styles[0]?.value || ''
+      value: styleEn?.value || ''
     },
     price: product.price,
     sizes: product.sizes,

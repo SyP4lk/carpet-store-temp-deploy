@@ -12,7 +12,7 @@ import { useSearchParams } from "next/navigation";
 import { calculateRugPrice } from "@/lib/calculatePrice";
 import { toast } from "sonner";
 import { StockProvider } from "@/context/StockContext";
-import { getBmhomeVariantPriceEur, getDisplaySku, getPriceOnRequestLabel, isPriceOnRequestProduct } from "@/lib/productUtils";
+import { getBmhomeVariantPriceEur, getDisplaySku, getPriceOnRequestLabel, isBmhomeSpecialSizeSelected, isPriceOnRequestProduct } from "@/lib/productUtils";
 
 type Props = {
   rug: RugProduct;
@@ -50,7 +50,9 @@ const stockCode = useMemo(() => getDisplaySku(rug, selectedSize) || "N/A", [rug,
   const features = rug.features?.[locale];
   const {dictionary} = useDictionary();
   const { eurToRubRate } = useCurrency();
-  const priceOnRequest = isPriceOnRequestProduct(rug);
+  const isBmhome = !!rug.sourceMeta?.bmhome;
+  const specialSizeSelected = isBmhome && isBmhomeSpecialSizeSelected(rug, selectedSize);
+  const priceOnRequest = isPriceOnRequestProduct(rug) || specialSizeSelected;
 
   const [open, setOpen] = useState(false);
 
@@ -59,7 +61,6 @@ const stockCode = useMemo(() => getDisplaySku(rug, selectedSize) || "N/A", [rug,
   const currentPriceEur = useMemo(() => {
     if (priceOnRequest) return 0;
 
-    const isBmhome = !!rug.sourceMeta?.bmhome;
     if (isBmhome) {
       const vPrice = getBmhomeVariantPriceEur(rug, selectedSize);
       return vPrice ?? basePrice;
@@ -73,7 +74,7 @@ const stockCode = useMemo(() => getDisplaySku(rug, selectedSize) || "N/A", [rug,
       console.error('Error calculating price:', error);
       return basePrice;
     }
-  }, [basePrice, rug, selectedSize, priceOnRequest]);
+  }, [basePrice, rug, selectedSize, priceOnRequest, isBmhome]);
 
 
 

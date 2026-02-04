@@ -10,7 +10,7 @@ import { calculateRugPrice } from "@/lib/calculatePrice";
 import { useDictionary } from "@/hooks/useDictionary";
 import { useCurrency } from "@/context/CurrencyContext";
 import { Locale } from "@/localization/config";
-import { getBmhomeVariantPriceEur, getDisplaySku, getPriceOnRequestLabel, getRequestPriceCta, isPriceOnRequestProduct } from "@/lib/productUtils";
+import { getBmhomeVariantPriceEur, getDisplaySku, getPriceOnRequestLabel, getRequestPriceCta, isBmhomeSpecialSizeSelected, isPriceOnRequestProduct } from "@/lib/productUtils";
 
 
 type Props = {
@@ -65,13 +65,14 @@ const RugQuantityAddToCart: React.FC<Props> = ({ rug }) => {
   }, [searchParams, rug.sizes, rug.defaultSize]);
 
 
-  const priceOnRequest = isPriceOnRequestProduct(rug);
+  const isBmhome = !!rug.sourceMeta?.bmhome;
+  const specialSizeSelected = isBmhome && isBmhomeSpecialSizeSelected(rug, selectedSize);
+  const priceOnRequest = isPriceOnRequestProduct(rug) || specialSizeSelected;
   const basePrice = typeof rug.price === 'string' ? parseFloat(rug.price.replace(/,/g, '')) : (rug.price ?? 0);
 
   const priceEur = useMemo(() => {
     if (priceOnRequest) return 0;
 
-    const isBmhome = !!rug.sourceMeta?.bmhome;
     if (isBmhome) {
       const vPrice = getBmhomeVariantPriceEur(rug, selectedSize);
       return vPrice ?? basePrice;
@@ -85,7 +86,7 @@ const RugQuantityAddToCart: React.FC<Props> = ({ rug }) => {
       console.error("Error calculating price:", error);
       return basePrice;
     }
-  }, [basePrice, rug, selectedSize, priceOnRequest]);
+  }, [basePrice, rug, selectedSize, priceOnRequest, isBmhome]);
 
   const displayPrice = useMemo(() => {
     if (priceOnRequest) return 0;
