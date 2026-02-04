@@ -354,7 +354,7 @@ function loadBmhomeTaxonomyMapping(): BmhomeTaxonomyMapping {
 }
 
 function mapTaxonomyValue(
-  type: 'color' | 'style' | 'collection' | 'category_to_color',
+  type: 'color' | 'style' | 'collection' | 'category_to_color' | 'categoryTree_to_color',
   raw: string
 ): string | null {
   const trimmed = raw.trim()
