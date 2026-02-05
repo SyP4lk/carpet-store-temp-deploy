@@ -199,6 +199,60 @@ function extractFeatureLists(html: string) {
   return { care, technical }
 }
 
+type FeaturesTemplateLocale = {
+  head: string
+  careAndWarranty: string[]
+  technicalInfo: string[]
+}
+
+type DefaultFeaturesTemplate = {
+  en: FeaturesTemplateLocale
+  ru: FeaturesTemplateLocale
+}
+
+let defaultFeaturesTemplateCache: DefaultFeaturesTemplate | null = null
+
+function getDefaultFeaturesTemplate(): DefaultFeaturesTemplate {
+  if (defaultFeaturesTemplateCache) return defaultFeaturesTemplateCache
+
+  const dataPath = path.resolve(process.cwd(), 'src/context/data.json')
+  const raw = JSON.parse(fs.readFileSync(dataPath, 'utf8')) as any
+
+  const first =
+    (Array.isArray(raw) && raw[0]) ||
+    (Array.isArray(raw?.data) && raw.data[0]) ||
+    (Array.isArray(raw?.products) && raw.products[0]) ||
+    null
+
+  if (!first?.features?.en || !first?.features?.ru) {
+    throw new Error('Default features template not found in src/context/data.json')
+  }
+
+  const pickArr = (obj: any, snakeKey: string, camelKey: string) => {
+    const v = obj?.[snakeKey] ?? obj?.[camelKey] ?? []
+    return Array.isArray(v) ? v.map((x) => String(x).trim()).filter(Boolean) : []
+  }
+
+  const en = first.features.en
+  const ru = first.features.ru
+
+  defaultFeaturesTemplateCache = {
+    en: {
+      head: String(en.head ?? '').trim(),
+      careAndWarranty: pickArr(en, 'care_and_warranty', 'careAndWarranty'),
+      technicalInfo: pickArr(en, 'technical_info', 'technicalInfo'),
+    },
+    ru: {
+      head: String(ru.head ?? '').trim(),
+      careAndWarranty: pickArr(ru, 'care_and_warranty', 'careAndWarranty'),
+      technicalInfo: pickArr(ru, 'technical_info', 'technicalInfo'),
+    },
+  }
+
+  return defaultFeaturesTemplateCache
+}
+
+
 const SIZE_REGEX = /(\d+(?:\.\d+)?)\s*[x\u00d7\u0445]\s*(\d+(?:\.\d+)?)/i
 
 function parseSizeArea(size: string): number {
@@ -689,11 +743,13 @@ async function main() {
     const shortText = htmlToText(product.shortHtml || '')
     const descriptionText = shortText || htmlToText(product.descriptionHtml || '')
 
-    // featureHead можно оставить как есть, но чтобы не дублировать списки из Aciklama,
-    // лучше оставить краткий текст
-    const featureHead = htmlToText(product.descriptionHtml || '') || descriptionText
+    // Вариант A: features берем не из XML, а из шаблона data.json
+    const templateFeatures = getDefaultFeaturesTemplate()
 
-    const { care, technical } = extractFeatureLists(product.descriptionHtml || '')
+    const featureHead = templateFeatures.en.head
+    const care = templateFeatures.en.careAndWarranty
+    const technical = templateFeatures.en.technicalInfo
+
 
     const detailMap = new Map<string, string>()
     const detailListMap = new Map<string, string[]>()
@@ -786,7 +842,7 @@ async function main() {
           scopes: {
             descriptions: false,
             technicalDetails: false,
-            lists: false,
+            lists: true,
             taxonomy: false,
           },
         }
@@ -888,24 +944,20 @@ async function main() {
               ],
             },
             features: {
-              deleteMany: shouldUpdateRu ? {} : { locale: 'en' },
+              deleteMany: {},
               create: [
                 {
                   locale: 'en',
-                  head: featureHead,
-                  careAndWarranty: care,
-                  technicalInfo: technical,
+                  head: templateFeatures.en.head,
+                  careAndWarranty: templateFeatures.en.careAndWarranty,
+                  technicalInfo: templateFeatures.en.technicalInfo,
                 },
-                ...(shouldUpdateRu
-                  ? [
-                      {
-                        locale: 'ru',
-                        head: featureHead,
-                        careAndWarranty: care,
-                        technicalInfo: technical,
-                      },
-                    ]
-                  : []),
+                {
+                  locale: 'ru',
+                  head: templateFeatures.ru.head,
+                  careAndWarranty: templateFeatures.ru.careAndWarranty,
+                  technicalInfo: templateFeatures.ru.technicalInfo,
+                },
               ],
             },
             colors: {
@@ -964,15 +1016,15 @@ async function main() {
               create: [
                 {
                   locale: 'en',
-                  head: featureHead,
-                  careAndWarranty: care,
-                  technicalInfo: technical,
+                  head: templateFeatures.en.head,
+                  careAndWarranty: templateFeatures.en.careAndWarranty,
+                  technicalInfo: templateFeatures.en.technicalInfo,
                 },
                 {
                   locale: 'ru',
-                  head: featureHead,
-                  careAndWarranty: care,
-                  technicalInfo: technical,
+                  head: templateFeatures.ru.head,
+                  careAndWarranty: templateFeatures.ru.careAndWarranty,
+                  technicalInfo: templateFeatures.ru.technicalInfo,
                 },
               ],
             },
