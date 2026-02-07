@@ -9,792 +9,636 @@ type LayerId = "A" | "B";
 
 type LayerState = {
   id: LayerId;
-  code: string;
-  isLoading: boolean;
-  error: string | null;
   product: RugProduct | null;
-  imageUrl: string | null;
-  image: HTMLImageElement | null;
-  sizes: string[];
-  defaultSize: string | null;
-  selectedSize: string | null;
-  sku: string | null;
-  userScale: number;
-  sizeScale: number;
-  actualScale: number;
-  rotate: number;
-  shadowEnabled: boolean;
-  shadowStrength: number;
+  img: HTMLImageElement | null;
+  article: string;
+  size: string;
+  scalePct: number;
+  rotateDeg: number;
+  shadowPct: number;
   quad: Quad | null;
 };
 
-type DragState =
-  | { mode: "move"; layerId: LayerId; last: Point }
-  | { mode: "corner"; layerId: LayerId; corner: keyof Quad; last: Point }
-  | null;
+function dist(a: Point, b: Point) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
 
-const SIZE_REGEX = /(\d+(?:\.\d+)?)\s*[x\u00d7\u0445]\s*(\d+(?:\.\d+)?)/i;
-
-const parseSizeSides = (sizeLabel: string | null): { w: number; h: number } | null => {
-  if (!sizeLabel) return null;
-  const cleaned = sizeLabel.replace(/cm/gi, "").trim();
-  const match = cleaned.match(SIZE_REGEX);
-  if (!match) return null;
-  const w = Number(match[1]);
-  const h = Number(match[2]);
-  if (!Number.isFinite(w) || !Number.isFinite(h)) return null;
-  if (w <= 0 || h <= 0) return null;
-  return { w, h };
-};
-
-const normalizeSizeKey = (value?: string | null) =>
-  (value || "")
-    .toLowerCase()
-    .replace(/cm/gi, "")
-    .replace(/\s+/g, "")
-    .replace(/[x\u00d7\u0445]/g, "x")
-    .trim();
-
-const getSizeScale = (baseSize: string | null, selectedSize: string | null) => {
-  if (!baseSize || !selectedSize) return 1;
-  const base = parseSizeSides(baseSize);
-  const next = parseSizeSides(selectedSize);
-  if (!base || !next) return 1;
-  const baseArea = base.w * base.h;
-  const nextArea = next.w * next.h;
-  if (!baseArea || !nextArea) return 1;
-  return Math.sqrt(nextArea / baseArea);
-};
-
-const getSkuForSize = (product: RugProduct | null, sizeLabel: string | null) => {
-  if (!product || !sizeLabel) return null;
-  const variants = product.sourceMeta?.bmhome?.variants ?? [];
-  const target = normalizeSizeKey(sizeLabel);
-  const match = variants.find((variant) => normalizeSizeKey(variant.sizeLabel) === target);
-  return match?.sku ?? null;
-};
-
-const createEmptyLayer = (id: LayerId): LayerState => ({
-  id,
-  code: "",
-  isLoading: false,
-  error: null,
-  product: null,
-  imageUrl: null,
-  image: null,
-  sizes: [],
-  defaultSize: null,
-  selectedSize: null,
-  sku: null,
-  userScale: 100,
-  sizeScale: 1,
-  actualScale: 1,
-  rotate: 0,
-  shadowEnabled: true,
-  shadowStrength: 30,
-  quad: null,
-});
-
-const getQuadCenter = (quad: Quad): Point => ({
-  x: (quad.tl.x + quad.tr.x + quad.br.x + quad.bl.x) / 4,
-  y: (quad.tl.y + quad.tr.y + quad.br.y + quad.bl.y) / 4,
-});
-
-const translateQuad = (quad: Quad, dx: number, dy: number): Quad => ({
-  tl: { x: quad.tl.x + dx, y: quad.tl.y + dy },
-  tr: { x: quad.tr.x + dx, y: quad.tr.y + dy },
-  br: { x: quad.br.x + dx, y: quad.br.y + dy },
-  bl: { x: quad.bl.x + dx, y: quad.bl.y + dy },
-});
-
-const scaleQuad = (quad: Quad, center: Point, factor: number): Quad => {
-  const scalePoint = (p: Point): Point => ({
-    x: center.x + (p.x - center.x) * factor,
-    y: center.y + (p.y - center.y) * factor,
-  });
+function centerOfQuad(q: Quad): Point {
   return {
-    tl: scalePoint(quad.tl),
-    tr: scalePoint(quad.tr),
-    br: scalePoint(quad.br),
-    bl: scalePoint(quad.bl),
+    x: (q[0].x + q[1].x + q[2].x + q[3].x) / 4,
+    y: (q[0].y + q[1].y + q[2].y + q[3].y) / 4,
   };
-};
+}
 
-const rotateQuad = (quad: Quad, center: Point, degrees: number): Quad => {
-  const rad = (degrees * Math.PI) / 180;
+function rotatePointAround(p: Point, c: Point, deg: number): Point {
+  const rad = (deg * Math.PI) / 180;
   const cos = Math.cos(rad);
   const sin = Math.sin(rad);
-  const rotatePoint = (p: Point): Point => {
-    const dx = p.x - center.x;
-    const dy = p.y - center.y;
-    return {
-      x: center.x + dx * cos - dy * sin,
-      y: center.y + dx * sin + dy * cos,
-    };
-  };
-  return {
-    tl: rotatePoint(quad.tl),
-    tr: rotatePoint(quad.tr),
-    br: rotatePoint(quad.br),
-    bl: rotatePoint(quad.bl),
-  };
-};
+  const x = p.x - c.x;
+  const y = p.y - c.y;
+  return { x: c.x + x * cos - y * sin, y: c.y + x * sin + y * cos };
+}
 
-const createInitialQuad = (
-  width: number,
-  height: number,
-  img: HTMLImageElement,
-  scaleFactor: number
-): Quad => {
-  const aspect = img.width / img.height || 1;
-  const baseWidth = width * 0.42;
-  let w = baseWidth;
-  let h = w / aspect;
-  const maxHeight = height * 0.55;
-  if (h > maxHeight) {
-    h = maxHeight;
-    w = h * aspect;
-  }
-  w *= scaleFactor;
-  h *= scaleFactor;
+function scalePointAround(p: Point, c: Point, factor: number): Point {
+  return { x: c.x + (p.x - c.x) * factor, y: c.y + (p.y - c.y) * factor };
+}
 
-  const center = { x: width / 2, y: height * 0.65 };
-  return {
-    tl: { x: center.x - w / 2, y: center.y - h / 2 },
-    tr: { x: center.x + w / 2, y: center.y - h / 2 },
-    br: { x: center.x + w / 2, y: center.y + h / 2 },
-    bl: { x: center.x - w / 2, y: center.y + h / 2 },
-  };
-};
+function parseSizeArea(sizeLabel: string): number | null {
+  // supports: 80 x 150, 80x150, 80×150, 80 х 150
+  const s = (sizeLabel ?? "").replace(/cm/gi, "").trim();
+  const m = s.match(/(\d+(?:[.,]\d+)?)\s*[x×х]\s*(\d+(?:[.,]\d+)?)/i);
+  if (!m) return null;
+  const a = Number.parseFloat(m[1].replace(",", "."));
+  const b = Number.parseFloat(m[2].replace(",", "."));
+  if (!Number.isFinite(a) || !Number.isFinite(b) || a <= 0 || b <= 0) return null;
+  return a * b;
+}
 
-const getCornerHit = (quad: Quad, point: Point, radius = 12): keyof Quad | null => {
-  const corners: Array<[keyof Quad, Point]> = [
-    ["tl", quad.tl],
-    ["tr", quad.tr],
-    ["br", quad.br],
-    ["bl", quad.bl],
-  ];
-  const r2 = radius * radius;
-  for (const [key, p] of corners) {
-    const dx = p.x - point.x;
-    const dy = p.y - point.y;
-    if (dx * dx + dy * dy <= r2) return key;
-  }
-  return null;
-};
+async function loadImg(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Image load failed"));
+    img.src = src;
+  });
+}
 
-const computeActualScale = (userScale: number, sizeScale: number) => (userScale / 100) * sizeScale;
+async function downscaleToBlobUrl(file: File, maxDim = 1600): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  const w = bitmap.width;
+  const h = bitmap.height;
+  const scale = Math.min(1, maxDim / Math.max(w, h));
+  const nw = Math.max(1, Math.round(w * scale));
+  const nh = Math.max(1, Math.round(h * scale));
 
-const VrPreview: React.FC = () => {
+  const c = document.createElement("canvas");
+  c.width = nw;
+  c.height = nh;
+
+  const ctx = c.getContext("2d");
+  if (!ctx) throw new Error("Canvas not supported");
+  ctx.drawImage(bitmap, 0, 0, nw, nh);
+
+  const blob: Blob = await new Promise((resolve, reject) => {
+    c.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob failed"))), "image/jpeg", 0.92);
+  });
+
+  return URL.createObjectURL(blob);
+}
+
+function initRectQuad(canvasW: number, canvasH: number, rugImg: HTMLImageElement): Quad {
+  const rw = canvasW * 0.42;
+  const aspect = (rugImg.naturalHeight || rugImg.height) / (rugImg.naturalWidth || rugImg.width);
+  const rh = rw * aspect;
+
+  const cx = canvasW * 0.5;
+  const cy = canvasH * 0.68;
+
+  const tl = { x: cx - rw / 2, y: cy - rh / 2 };
+  const tr = { x: cx + rw / 2, y: cy - rh / 2 };
+  const br = { x: cx + rw / 2, y: cy + rh / 2 };
+  const bl = { x: cx - rw / 2, y: cy + rh / 2 };
+  return [tl, tr, br, bl];
+}
+
+export default function VrPreview() {
   const [locale] = useLocale();
   const isRu = useMemo(() => locale === "ru", [locale]);
 
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-  const [photoImage, setPhotoImage] = useState<HTMLImageElement | null>(null);
-  const [layerA, setLayerA] = useState<LayerState>(() => createEmptyLayer("A"));
-  const [layerB, setLayerB] = useState<LayerState>(() => createEmptyLayer("B"));
-  const [activeLayer, setActiveLayer] = useState<LayerId>("A");
-  const [showSecond, setShowSecond] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const hostRef = useRef<HTMLDivElement | null>(null);
+
+  const [roomUrl, setRoomUrl] = useState<string | null>(null);
+  const [roomImg, setRoomImg] = useState<HTMLImageElement | null>(null);
+
+  const [active, setActive] = useState<LayerId>("A");
   const [compareMode, setCompareMode] = useState(false);
   const [compareSplit, setCompareSplit] = useState(50);
-  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const dragRef = useRef<DragState>(null);
+  const [loading, setLoading] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const activeState = activeLayer === "A" ? layerA : layerB;
-  const setActiveState = activeLayer === "A" ? setLayerA : setLayerB;
+  const [layerA, setLayerA] = useState<LayerState>({
+    id: "A",
+    product: null,
+    img: null,
+    article: "",
+    size: "",
+    scalePct: 100,
+    rotateDeg: 0,
+    shadowPct: 25,
+    quad: null,
+  });
 
-  const handlePhotoFile = (file: File | null) => {
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setPhotoUrl((prev) => {
-      if (prev && prev.startsWith("blob:")) URL.revokeObjectURL(prev);
-      return url;
+  const [layerB, setLayerB] = useState<LayerState>({
+    id: "B",
+    product: null,
+    img: null,
+    article: "",
+    size: "",
+    scalePct: 100,
+    rotateDeg: 0,
+    shadowPct: 25,
+    quad: null,
+  });
+
+  const getLayer = (id: LayerId) => (id === "A" ? layerA : layerB);
+  const setLayer = (id: LayerId, next: LayerState) => (id === "A" ? setLayerA(next) : setLayerB(next));
+
+  // Resize canvas to container
+  useEffect(() => {
+    const el = hostRef.current;
+    const c = canvasRef.current;
+    if (!el || !c) return;
+
+    const ro = new ResizeObserver(() => {
+      const rect = el.getBoundingClientRect();
+      const w = Math.max(320, Math.floor(rect.width));
+      const h = Math.max(360, Math.floor(rect.height));
+      if (c.width !== w) c.width = w;
+      if (c.height !== h) c.height = h;
+      draw();
     });
-  };
 
+    ro.observe(el);
+    return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomImg, layerA, layerB, compareMode, compareSplit, active]);
+
+  // Load room image
   useEffect(() => {
-    if (!photoUrl) {
-      setPhotoImage(null);
-      return;
-    }
-    const img = new Image();
-    img.onload = () => setPhotoImage(img);
-    img.src = photoUrl;
-  }, [photoUrl]);
-
-  const loadProduct = async (layerId: LayerId, code: string) => {
-    const setter = layerId === "A" ? setLayerA : setLayerB;
-    const current = layerId === "A" ? layerA : layerB;
-    if (!code.trim()) {
-      setter({ ...current, error: isRu ? "Введите артикул" : "Enter an article" });
-      return;
-    }
-    setter({ ...current, isLoading: true, error: null });
-    try {
-      const res = await fetch(`/api/vr/product?code=${encodeURIComponent(code.trim())}`);
-      if (!res.ok) {
-        setter({
-          ...current,
-          isLoading: false,
-          error: isRu ? "Ковер не найден" : "Rug not found",
-          product: null,
-          imageUrl: null,
-          image: null,
-          quad: null,
-        });
-        return;
-      }
-      const data = await res.json();
-      const product = data.product as RugProduct;
-      const sizes = product.sizes || [];
-      const defaultSize = product.defaultSize || sizes[0] || null;
-      const selectedSize = defaultSize;
-      const sizeScale = getSizeScale(defaultSize, selectedSize);
-      const userScale = 100;
-      const actualScale = computeActualScale(userScale, sizeScale);
-
-      setter({
-        ...current,
-        isLoading: false,
-        error: null,
-        product,
-        sizes,
-        defaultSize,
-        selectedSize,
-        sku: getSkuForSize(product, selectedSize),
-        imageUrl: product.images?.[0] || null,
-        image: null,
-        userScale,
-        sizeScale,
-        actualScale,
-        rotate: 0,
-        shadowEnabled: true,
-        shadowStrength: 30,
-        quad: null,
+    if (!roomUrl) return;
+    let alive = true;
+    loadImg(roomUrl)
+      .then((img) => {
+        if (!alive) return;
+        setRoomImg(img);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setRoomImg(null);
       });
-    } catch (error) {
-      setter({
-        ...current,
-        isLoading: false,
-        error: isRu ? "Ошибка загрузки" : "Failed to load",
-      });
-    }
-  };
+    return () => {
+      alive = false;
+    };
+  }, [roomUrl]);
 
-  const updateLayerScale = (layer: LayerState, setLayer: (next: LayerState) => void, nextUserScale: number, nextSizeScale?: number) => {
-    const sizeScale = nextSizeScale ?? layer.sizeScale;
-    const nextActual = computeActualScale(nextUserScale, sizeScale);
-    let quad = layer.quad;
-    if (quad) {
-      const factor = nextActual / (layer.actualScale || 1);
-      quad = scaleQuad(quad, getQuadCenter(quad), factor);
-    }
-    setLayer({ ...layer, userScale: nextUserScale, sizeScale, actualScale: nextActual, quad });
-  };
-
-  const updateLayerRotation = (layer: LayerState, setLayer: (next: LayerState) => void, nextRotate: number) => {
-    let quad = layer.quad;
-    if (quad) {
-      const delta = nextRotate - layer.rotate;
-      quad = rotateQuad(quad, getQuadCenter(quad), delta);
-    }
-    setLayer({ ...layer, rotate: nextRotate, quad });
-  };
-
-  const updateLayerSize = (layer: LayerState, setLayer: (next: LayerState) => void, nextSize: string) => {
-    const sizeScale = getSizeScale(layer.defaultSize, nextSize);
-    const sku = getSkuForSize(layer.product, nextSize);
-    updateLayerScale({ ...layer, selectedSize: nextSize, sku }, setLayer, layer.userScale, sizeScale);
-  };
-
-  useEffect(() => {
-    if (!layerA.imageUrl) {
-      if (layerA.image) setLayerA({ ...layerA, image: null, quad: null });
-      return;
-    }
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => setLayerA((prev) => ({ ...prev, image: img }));
-    img.src = layerA.imageUrl;
-  }, [layerA.imageUrl]);
-
-  useEffect(() => {
-    if (!layerB.imageUrl) {
-      if (layerB.image) setLayerB({ ...layerB, image: null, quad: null });
-      return;
-    }
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => setLayerB((prev) => ({ ...prev, image: img }));
-    img.src = layerB.imageUrl;
-  }, [layerB.imageUrl]);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const element = containerRef.current;
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setCanvasSize({
-          width: Math.max(1, Math.floor(entry.contentRect.width)),
-          height: Math.max(1, Math.floor(entry.contentRect.height)),
-        });
-      }
-    });
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || !canvasSize.width || !canvasSize.height) return;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.round(canvasSize.width * dpr);
-    canvas.height = Math.round(canvasSize.height * dpr);
-    canvas.style.width = `${canvasSize.width}px`;
-    canvas.style.height = `${canvasSize.height}px`;
-    const ctx = canvas.getContext("2d");
-    if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  }, [canvasSize]);
-
-  useEffect(() => {
-    if (layerA.image && !layerA.quad && canvasSize.width && canvasSize.height) {
-      const quad = createInitialQuad(canvasSize.width, canvasSize.height, layerA.image, layerA.actualScale);
-      setLayerA((prev) => ({ ...prev, quad }));
-    }
-  }, [layerA.image, layerA.quad, layerA.actualScale, canvasSize]);
-
-  useEffect(() => {
-    if (layerB.image && !layerB.quad && canvasSize.width && canvasSize.height) {
-      const quad = createInitialQuad(canvasSize.width, canvasSize.height, layerB.image, layerB.actualScale);
-      setLayerB((prev) => ({ ...prev, quad }));
-    }
-  }, [layerB.image, layerB.quad, layerB.actualScale, canvasSize]);
-
-  const drawBackground = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
-    ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = "#f3f4f6";
-    ctx.fillRect(0, 0, width, height);
-
-    if (!photoImage) return;
-    const scale = Math.max(width / photoImage.width, height / photoImage.height);
-    const drawW = photoImage.width * scale;
-    const drawH = photoImage.height * scale;
-    const dx = (width - drawW) / 2;
-    const dy = (height - drawH) / 2;
-    ctx.drawImage(photoImage, dx, dy, drawW, drawH);
-  };
-
-  const drawLayer = (ctx: CanvasRenderingContext2D, layer: LayerState) => {
-    if (!layer.image || !layer.quad) return;
-    if (layer.shadowEnabled) drawShadow(ctx, layer.quad, layer.shadowStrength);
-    drawImageToQuad(ctx, layer.image, layer.quad);
-  };
-
-  const drawHandles = (ctx: CanvasRenderingContext2D, quad: Quad) => {
-    ctx.save();
-    ctx.fillStyle = "#111827";
-    const points = [quad.tl, quad.tr, quad.br, quad.bl];
-    for (const point of points) {
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, 6, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
-  };
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+  // Draw
+  const draw = () => {
+    const c = canvasRef.current;
+    if (!c) return;
+    const ctx = c.getContext("2d");
     if (!ctx) return;
-    const width = canvasSize.width;
-    const height = canvasSize.height;
-    if (!width || !height) return;
 
-    drawBackground(ctx, width, height);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, c.width, c.height);
 
-    if (compareMode && showSecond && layerB.image && layerB.quad) {
-      const splitX = (width * compareSplit) / 100;
+    // background
+    if (roomImg) {
+      // cover
+      const iw = roomImg.naturalWidth || roomImg.width;
+      const ih = roomImg.naturalHeight || roomImg.height;
+      const scale = Math.max(c.width / iw, c.height / ih);
+      const dw = iw * scale;
+      const dh = ih * scale;
+      const dx = (c.width - dw) / 2;
+      const dy = (c.height - dh) / 2;
+      ctx.drawImage(roomImg, dx, dy, dw, dh);
+    } else {
+      ctx.fillStyle = "#f3f4f6";
+      ctx.fillRect(0, 0, c.width, c.height);
+    }
+
+    const la = layerA;
+    const lb = layerB;
+
+    const drawLayer = (layer: LayerState) => {
+      if (!layer.img || !layer.quad) return;
+      drawShadow(ctx, layer.quad, layer.shadowPct);
+      drawImageToQuad(ctx, layer.img, layer.quad, 18);
+    };
+
+    if (compareMode && la.img && la.quad && lb.img && lb.quad) {
+      drawLayer(la);
+      const splitX = (compareSplit / 100) * c.width;
       ctx.save();
       ctx.beginPath();
-      ctx.rect(0, 0, splitX, height);
+      ctx.rect(splitX, 0, c.width - splitX, c.height);
       ctx.clip();
-      drawLayer(ctx, layerA);
+      drawLayer(lb);
       ctx.restore();
 
+      // split line
       ctx.save();
-      ctx.beginPath();
-      ctx.rect(splitX, 0, width - splitX, height);
-      ctx.clip();
-      drawLayer(ctx, layerB);
-      ctx.restore();
-
-      ctx.save();
-      ctx.strokeStyle = "rgba(255,255,255,0.8)";
+      ctx.strokeStyle = "rgba(0,0,0,0.6)";
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(splitX, 0);
-      ctx.lineTo(splitX, height);
+      ctx.lineTo(splitX, c.height);
       ctx.stroke();
       ctx.restore();
     } else {
-      drawLayer(ctx, layerA);
-      if (showSecond) drawLayer(ctx, layerB);
+      drawLayer(la);
+      drawLayer(lb);
     }
 
-    const activeQuad = activeState.quad;
-    if (activeQuad) drawHandles(ctx, activeQuad);
-  }, [
-    photoImage,
-    layerA,
-    layerB,
-    compareMode,
-    compareSplit,
-    showSecond,
-    activeState.quad,
-    canvasSize,
-  ]);
-
-  const getCanvasPoint = (event: React.PointerEvent<HTMLCanvasElement>): Point => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    return {
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
-    };
+    // handles for active layer
+    const act = active === "A" ? la : lb;
+    if (act.quad) {
+      ctx.save();
+      ctx.fillStyle = "rgba(0,0,0,0.75)";
+      for (const p of act.quad) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
   };
 
-  const onPointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    const layer = activeState;
-    if (!layer.quad) return;
-    const point = getCanvasPoint(event);
-    const corner = getCornerHit(layer.quad, point);
-    if (corner) {
-      dragRef.current = { mode: "corner", layerId: activeLayer, corner, last: point };
-      event.currentTarget.setPointerCapture(event.pointerId);
+  useEffect(() => {
+    draw();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomImg, layerA, layerB, compareMode, compareSplit, active]);
+
+  // Interaction
+  const dragRef = useRef<{
+    mode: "none" | "corner" | "move";
+    cornerIndex: number;
+    last: Point;
+  }>({ mode: "none", cornerIndex: -1, last: { x: 0, y: 0 } });
+
+  const getPointer = (e: React.PointerEvent<HTMLCanvasElement>): Point => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  };
+
+  const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const p = getPointer(e);
+    const act = getLayer(active);
+    if (!act.quad) return;
+
+    // corners
+    for (let i = 0; i < 4; i++) {
+      if (dist(p, act.quad[i]) <= 14) {
+        dragRef.current = { mode: "corner", cornerIndex: i, last: p };
+        (e.currentTarget as any).setPointerCapture?.(e.pointerId);
+        return;
+      }
+    }
+
+    // inside
+    if (pointInQuad(p, act.quad)) {
+      dragRef.current = { mode: "move", cornerIndex: -1, last: p };
+      (e.currentTarget as any).setPointerCapture?.(e.pointerId);
+    }
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const d = dragRef.current;
+    if (d.mode === "none") return;
+
+    const p = getPointer(e);
+    const dx = p.x - d.last.x;
+    const dy = p.y - d.last.y;
+    d.last = p;
+
+    const act = getLayer(active);
+    if (!act.quad) return;
+
+    const next: LayerState = { ...act, quad: [...act.quad.map((pt) => ({ ...pt }))] as Quad };
+
+    if (d.mode === "corner") {
+      next.quad![d.cornerIndex] = { x: next.quad![d.cornerIndex].x + dx, y: next.quad![d.cornerIndex].y + dy };
+    } else if (d.mode === "move") {
+      next.quad = next.quad!.map((pt) => ({ x: pt.x + dx, y: pt.y + dy })) as Quad;
+    }
+
+    setLayer(active, next);
+  };
+
+  const onPointerUp = () => {
+    dragRef.current.mode = "none";
+    dragRef.current.cornerIndex = -1;
+  };
+
+  const applyScale = (id: LayerId, nextPct: number) => {
+    const layer = getLayer(id);
+    if (!layer.quad) return setLayer(id, { ...layer, scalePct: nextPct });
+
+    const factor = nextPct / (layer.scalePct || 1);
+    const c = centerOfQuad(layer.quad);
+    const nextQuad = layer.quad.map((p) => scalePointAround(p, c, factor)) as Quad;
+    setLayer(id, { ...layer, scalePct: nextPct, quad: nextQuad });
+  };
+
+  const applyRotate = (id: LayerId, nextDeg: number) => {
+    const layer = getLayer(id);
+    if (!layer.quad) return setLayer(id, { ...layer, rotateDeg: nextDeg });
+
+    const delta = nextDeg - (layer.rotateDeg || 0);
+    const c = centerOfQuad(layer.quad);
+    const nextQuad = layer.quad.map((p) => rotatePointAround(p, c, delta)) as Quad;
+    setLayer(id, { ...layer, rotateDeg: nextDeg, quad: nextQuad });
+  };
+
+  const applyShadow = (id: LayerId, nextPct: number) => {
+    const layer = getLayer(id);
+    setLayer(id, { ...layer, shadowPct: nextPct });
+  };
+
+  const applySize = (id: LayerId, nextSize: string) => {
+    const layer = getLayer(id);
+    const oldArea = layer.size ? parseSizeArea(layer.size) : null;
+    const newArea = nextSize ? parseSizeArea(nextSize) : null;
+
+    if (layer.quad && oldArea && newArea && oldArea > 0 && newArea > 0) {
+      const factor = Math.sqrt(newArea / oldArea);
+      const c = centerOfQuad(layer.quad);
+      const nextQuad = layer.quad.map((p) => scalePointAround(p, c, factor)) as Quad;
+      setLayer(id, { ...layer, size: nextSize, quad: nextQuad });
+    } else {
+      setLayer(id, { ...layer, size: nextSize });
+    }
+  };
+
+  const findProduct = async (id: LayerId) => {
+    setError(null);
+    const layer = getLayer(id);
+    const code = layer.article.trim();
+    if (!code) {
+      setError(isRu ? "Введите артикул" : "Enter article");
       return;
     }
-    if (pointInQuad(point, layer.quad)) {
-      dragRef.current = { mode: "move", layerId: activeLayer, last: point };
-      event.currentTarget.setPointerCapture(event.pointerId);
+
+    setLoading(isRu ? "Поиск..." : "Searching...");
+    try {
+      const res = await fetch(`/api/vr/product?code=${encodeURIComponent(code)}`, { cache: "no-store" });
+      if (!res.ok) {
+        setLoading(null);
+        setError(res.status === 404 ? (isRu ? "Не найдено" : "Not found") : (isRu ? "Ошибка поиска" : "Search error"));
+        return;
+      }
+
+      const data = await res.json();
+      const product: RugProduct = data.product;
+
+      const imageUrl = product.images?.[0];
+      if (!imageUrl) {
+        setLoading(null);
+        setError(isRu ? "У товара нет картинки" : "No image found");
+        return;
+      }
+
+      const img = await loadImg(imageUrl);
+
+      const c = canvasRef.current;
+      if (!c) {
+        setLoading(null);
+        setError(isRu ? "Canvas не готов" : "Canvas not ready");
+        return;
+      }
+
+      const sizes = (product.sizes ?? []).filter((s) => !/özel\s*ölçü|ozel\s*olcu/i.test(s));
+      const size = (product.defaultSize && sizes.includes(product.defaultSize)) ? product.defaultSize : (sizes[0] ?? "");
+
+      const quad = initRectQuad(c.width, c.height, img);
+
+      const next: LayerState = {
+        ...layer,
+        product,
+        img,
+        size,
+        quad,
+        scalePct: 100,
+        rotateDeg: 0,
+        shadowPct: 25,
+      };
+
+      setLayer(id, next);
+      setLoading(null);
+    } catch {
+      setLoading(null);
+      setError(isRu ? "Ошибка загрузки" : "Load error");
     }
   };
 
-  const onPointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    const state = dragRef.current;
-    if (!state) return;
-    const point = getCanvasPoint(event);
-    const layer = state.layerId === "A" ? layerA : layerB;
-    const setLayer = state.layerId === "A" ? setLayerA : setLayerB;
-    if (!layer.quad) return;
-    const dx = point.x - state.last.x;
-    const dy = point.y - state.last.y;
-    let quad = layer.quad;
-    if (state.mode === "move") {
-      quad = translateQuad(quad, dx, dy);
-    } else {
-      quad = { ...quad, [state.corner]: point };
-    }
-    setLayer({ ...layer, quad });
-    dragRef.current = { ...state, last: point };
+  const download = () => {
+    const c = canvasRef.current;
+    if (!c) return;
+
+    const url = c.toDataURL("image/png");
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "koenigcarpet-vr.png";
+    a.click();
   };
 
-  const onPointerUp = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    dragRef.current = null;
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
+  const onRoomFile = async (file: File | null) => {
+    if (!file) return;
+    setError(null);
+    try {
+      const url = await downscaleToBlobUrl(file, 1600);
+      setRoomUrl(url);
+    } catch {
+      // fallback
+      const url = URL.createObjectURL(file);
+      setRoomUrl(url);
     }
   };
 
-  const handleDownload = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const url = canvas.toDataURL("image/png");
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "koenigcarpet-tryon.png";
-    link.click();
-  };
+  const activeLayer = getLayer(active);
+  const canDownload = !!roomImg && (!!layerA.img || !!layerB.img);
 
-  const handleToggleSecond = () => {
-    if (showSecond) {
-      setShowSecond(false);
-      setCompareMode(false);
-      setLayerB(createEmptyLayer("B"));
-      setActiveLayer("A");
-    } else {
-      setShowSecond(true);
-      setActiveLayer("B");
-    }
-  };
-
-  const renderLayerControls = (layer: LayerState, setLayer: (next: LayerState) => void) => (
-    <div className="space-y-4">
-      <div>
-        <label className="text-xs font-semibold uppercase text-gray-600">
-          {isRu ? "Артикул ковра" : "Rug article"}
-        </label>
-        <div className="mt-1 flex gap-2">
-          <input
-            className="flex-1 h-10 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black/20"
-            value={layer.code}
-            onChange={(e) => setLayer({ ...layer, code: e.target.value })}
-            placeholder={isRu ? "Например: 12345" : "e.g. 12345"}
-          />
-          <button
-            type="button"
-            onClick={() => loadProduct(layer.id, layer.code)}
-            className="h-10 px-4 rounded-lg bg-black text-white font-semibold hover:bg-black/90"
-          >
-            {isRu ? "Найти" : "Find"}
-          </button>
-        </div>
-        {layer.error ? <p className="text-xs text-red-600 mt-2">{layer.error}</p> : null}
-        {layer.product?.product_name?.[locale] ? (
-          <p className="text-xs text-gray-500 mt-2">{layer.product.product_name[locale]}</p>
-        ) : null}
-      </div>
-
-      {layer.sizes.length > 0 ? (
-        <div>
-          <label className="text-xs font-semibold uppercase text-gray-600">
-            {isRu ? "Размер" : "Size"}
-          </label>
-          <select
-            className="mt-1 w-full h-10 px-3 rounded-lg border border-gray-300 bg-white"
-            value={layer.selectedSize ?? ""}
-            onChange={(e) => updateLayerSize(layer, setLayer, e.target.value)}
-          >
-            {layer.sizes.map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
-        </div>
-      ) : null}
-
-      {layer.sku ? (
-        <div className="text-xs text-gray-600">
-          {isRu ? "SKU" : "SKU"}: <span className="font-semibold text-gray-900">{layer.sku}</span>
-        </div>
-      ) : null}
-
-      {layer.product?.images?.length ? (
-        <div>
-          <label className="text-xs font-semibold uppercase text-gray-600">
-            {isRu ? "Текстура" : "Texture"}
-          </label>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {layer.product.images.slice(0, 6).map((img, idx) => (
-              <button
-                type="button"
-                key={`${layer.id}-img-${idx}`}
-                className={`w-12 h-12 rounded-md border overflow-hidden ${layer.imageUrl === img ? "border-black" : "border-gray-200"}`}
-                onClick={() => setLayer({ ...layer, imageUrl: img, image: null, quad: null })}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={img} alt="texture" className="w-full h-full object-cover" />
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
+  const sizeOptions = (p: RugProduct | null) =>
+    (p?.sizes ?? []).filter((s) => !/özel\s*ölçü|ozel\s*olcu/i.test(s));
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
       <div className="p-5 border-b border-gray-200 flex items-center justify-between gap-3">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">
-            {isRu ? "Редактор примерки" : "Try-on editor"}
+            {isRu ? "VR примерка" : "VR try-on"}
           </h3>
           <p className="text-sm text-gray-600">
             {isRu
-              ? "Загрузите фото, найдите ковер по артикулу и настройте перспективу."
-              : "Upload a photo, search by article, and adjust perspective."}
+              ? "Загрузите фото, найдите ковер по артикулу, настройте перспективу и скачайте результат."
+              : "Upload a photo, find a rug by article, adjust perspective and download the result."}
           </p>
+          {loading ? <p className="text-sm text-gray-600 mt-1">{loading}</p> : null}
+          {error ? <p className="text-sm text-red-600 mt-1">{error}</p> : null}
         </div>
-        <span className="text-xs font-semibold uppercase px-3 py-1 rounded-full bg-gray-100 text-gray-700">
-          {isRu ? "VR" : "VR"}
-        </span>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setCompareMode((v) => !v)}
+            className="h-10 px-3 rounded-lg border border-gray-300 text-gray-800 font-semibold hover:bg-gray-50"
+          >
+            {compareMode ? (isRu ? "Обычный режим" : "Normal") : (isRu ? "Сравнение" : "Compare")}
+          </button>
+
+          <button
+            type="button"
+            onClick={download}
+            disabled={!canDownload}
+            className={`h-10 px-3 rounded-lg font-semibold ${canDownload ? "bg-black text-white hover:bg-black/90" : "bg-gray-200 text-gray-500 cursor-not-allowed"}`}
+          >
+            {isRu ? "Скачать" : "Download"}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
         <div className="lg:col-span-2 p-5">
-          <div
-            ref={containerRef}
-            className="min-h-[320px] sm:min-h-[380px] md:min-h-[460px] lg:min-h-[520px] rounded-xl border border-dashed border-gray-300 bg-gray-50 overflow-hidden relative"
-          >
+          <div ref={hostRef} className="min-h-[420px] md:min-h-[560px] rounded-xl border border-gray-200 bg-gray-50 overflow-hidden relative">
             <canvas
               ref={canvasRef}
-              className="absolute inset-0"
+              className="absolute inset-0 w-full h-full touch-none"
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
+              onPointerCancel={onPointerUp}
               onPointerLeave={onPointerUp}
             />
-            {!photoImage ? (
-              <div className="absolute inset-0 flex items-center justify-center text-center px-4">
-                <div>
-                  <p className="font-semibold text-gray-900">
-                    {isRu ? "Загрузите фото комнаты" : "Upload your room photo"}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {isRu ? "JPG или PNG, лучше при дневном свете" : "JPG or PNG, daylight is best"}
-                  </p>
-                </div>
-              </div>
-            ) : null}
           </div>
 
           <div className="mt-4 flex flex-col sm:flex-row gap-3">
             <label className="inline-flex items-center justify-center h-11 px-4 rounded-lg bg-black text-white font-semibold cursor-pointer hover:bg-black/90">
               {isRu ? "Загрузить фото" : "Upload photo"}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => handlePhotoFile(e.target.files?.[0] ?? null)}
-              />
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => onRoomFile(e.target.files?.[0] ?? null)} />
             </label>
 
             <button
               type="button"
-              onClick={handleDownload}
-              className="h-11 px-4 rounded-lg border border-gray-300 text-gray-800 font-semibold hover:bg-gray-50"
+              onClick={() => setActive("A")}
+              className={`h-11 px-4 rounded-lg border font-semibold ${active === "A" ? "border-black text-black" : "border-gray-300 text-gray-700 hover:bg-gray-50"}`}
             >
-              {isRu ? "Скачать результат" : "Download"}
+              {isRu ? "Ковер A" : "Rug A"}
             </button>
 
             <button
               type="button"
-              onClick={handleToggleSecond}
-              className="h-11 px-4 rounded-lg border border-gray-300 text-gray-800 font-semibold hover:bg-gray-50"
+              onClick={() => setActive("B")}
+              className={`h-11 px-4 rounded-lg border font-semibold ${active === "B" ? "border-black text-black" : "border-gray-300 text-gray-700 hover:bg-gray-50"}`}
             >
-              {showSecond ? (isRu ? "Убрать 2-й ковер" : "Remove 2nd rug") : (isRu ? "Добавить 2-й ковер" : "Add 2nd rug")}
+              {isRu ? "Ковер B" : "Rug B"}
             </button>
           </div>
 
-          {showSecond ? (
-            <div className="mt-4 flex items-center gap-3">
-              <label className="text-xs font-semibold uppercase text-gray-600">
-                {isRu ? "Сравнение" : "Compare"}
-              </label>
-              <input
-                type="checkbox"
-                checked={compareMode}
-                onChange={(e) => setCompareMode(e.target.checked)}
-              />
-              {compareMode ? (
-                <div className="flex-1 flex items-center gap-2">
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    value={compareSplit}
-                    onChange={(e) => setCompareSplit(Number(e.target.value))}
-                    className="w-full"
-                  />
-                  <span className="text-xs text-gray-500">{compareSplit}%</span>
-                </div>
-              ) : null}
+          {compareMode ? (
+            <div className="mt-4">
+              <div className="flex justify-between text-xs text-gray-600">
+                <span>{isRu ? "Разделитель сравнения" : "Compare split"}</span>
+                <span>{compareSplit}%</span>
+              </div>
+              <input type="range" min={5} max={95} value={compareSplit} onChange={(e) => setCompareSplit(Number(e.target.value))} className="w-full" />
             </div>
           ) : null}
         </div>
 
-        <div className="p-5 border-t lg:border-t-0 lg:border-l border-gray-200 bg-white space-y-6">
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveLayer("A")}
-              className={`flex-1 h-10 rounded-lg border text-sm font-semibold ${activeLayer === "A" ? "border-black bg-black text-white" : "border-gray-300 text-gray-800"}`}
-            >
-              {isRu ? "Ковер A" : "Rug A"}
-            </button>
-            {showSecond ? (
-              <button
-                type="button"
-                onClick={() => setActiveLayer("B")}
-                className={`flex-1 h-10 rounded-lg border text-sm font-semibold ${activeLayer === "B" ? "border-black bg-black text-white" : "border-gray-300 text-gray-800"}`}
-              >
-                {isRu ? "Ковер B" : "Rug B"}
-              </button>
-            ) : null}
-          </div>
+        <div className="p-5 border-t lg:border-t-0 lg:border-l border-gray-200 bg-white">
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl border border-gray-200 bg-gray-50">
+              <p className="text-sm font-semibold text-gray-900">
+                {active === "A" ? (isRu ? "Ковер A" : "Rug A") : (isRu ? "Ковер B" : "Rug B")}
+              </p>
 
-          {activeLayer === "A"
-            ? renderLayerControls(layerA, setLayerA)
-            : renderLayerControls(layerB, setLayerB)}
-
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-4">
-            <p className="text-sm font-semibold text-gray-900">{isRu ? "Управление" : "Controls"}</p>
-
-            <div>
-              <div className="flex justify-between text-xs text-gray-600">
-                <span>{isRu ? "Масштаб" : "Scale"}</span>
-                <span>{activeState.userScale}%</span>
-              </div>
-              <input
-                type="range"
-                min={30}
-                max={160}
-                value={activeState.userScale}
-                onChange={(e) => updateLayerScale(activeState, setActiveState, Number(e.target.value))}
-                className="w-full"
-              />
-            </div>
-
-            <div>
-              <div className="flex justify-between text-xs text-gray-600">
-                <span>{isRu ? "Поворот" : "Rotate"}</span>
-                <span>{activeState.rotate}°</span>
-              </div>
-              <input
-                type="range"
-                min={-45}
-                max={45}
-                value={activeState.rotate}
-                onChange={(e) => updateLayerRotation(activeState, setActiveState, Number(e.target.value))}
-                className="w-full"
-              />
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between text-xs text-gray-600">
-                <span>{isRu ? "Тень" : "Shadow"}</span>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={activeState.shadowEnabled}
-                    onChange={(e) => setActiveState({ ...activeState, shadowEnabled: e.target.checked })}
-                  />
-                  <span>{activeState.shadowEnabled ? (isRu ? "Вкл" : "On") : (isRu ? "Выкл" : "Off")}</span>
+              <div className="mt-3">
+                <label className="text-xs font-semibold uppercase text-gray-600">
+                  {isRu ? "Артикул" : "Article"}
                 </label>
+
+                <div className="mt-1 flex gap-2">
+                  <input
+                    className="flex-1 h-10 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black/20"
+                    value={activeLayer.article}
+                    onChange={(e) => setLayer(active, { ...activeLayer, article: e.target.value })}
+                    placeholder={isRu ? "Например: 2025-C-4395" : "e.g. 2025-C-4395"}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => findProduct(active)}
+                    className="h-10 px-4 rounded-lg bg-black text-white font-semibold hover:bg-black/90"
+                  >
+                    {isRu ? "Найти" : "Find"}
+                  </button>
+                </div>
+
+                {activeLayer.product ? (
+                  <p className="text-xs text-gray-600 mt-2">
+                    {isRu ? "Найдено:" : "Found:"}{" "}
+                    <span className="font-semibold">
+                      {isRu ? activeLayer.product.product_name.ru : activeLayer.product.product_name.en}
+                    </span>
+                  </p>
+                ) : null}
               </div>
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={activeState.shadowStrength}
-                onChange={(e) => setActiveState({ ...activeState, shadowStrength: Number(e.target.value) })}
-                className="w-full"
-              />
+
+              <div className="mt-4">
+                <label className="text-xs font-semibold uppercase text-gray-600">
+                  {isRu ? "Размер" : "Size"}
+                </label>
+
+                <select
+                  className="mt-1 w-full h-10 px-3 rounded-lg border border-gray-300 bg-white"
+                  value={activeLayer.size}
+                  onChange={(e) => applySize(active, e.target.value)}
+                  disabled={!activeLayer.product}
+                >
+                  <option value="">{isRu ? "Выберите размер" : "Select size"}</option>
+                  {sizeOptions(activeLayer.product).map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                <div>
+                  <div className="flex justify-between text-xs text-gray-600">
+                    <span>{isRu ? "Масштаб" : "Scale"}</span>
+                    <span>{activeLayer.scalePct}%</span>
+                  </div>
+                  <input type="range" min={40} max={180} value={activeLayer.scalePct} onChange={(e) => applyScale(active, Number(e.target.value))} className="w-full" />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs text-gray-600">
+                    <span>{isRu ? "Поворот" : "Rotate"}</span>
+                    <span>{activeLayer.rotateDeg}°</span>
+                  </div>
+                  <input type="range" min={-90} max={90} value={activeLayer.rotateDeg} onChange={(e) => applyRotate(active, Number(e.target.value))} className="w-full" />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs text-gray-600">
+                    <span>{isRu ? "Тень" : "Shadow"}</span>
+                    <span>{activeLayer.shadowPct}%</span>
+                  </div>
+                  <input type="range" min={0} max={100} value={activeLayer.shadowPct} onChange={(e) => applyShadow(active, Number(e.target.value))} className="w-full" />
+                </div>
+              </div>
+
+              <div className="mt-4 text-xs text-gray-500">
+                {isRu
+                  ? "Перспектива: перетаскивайте точки по углам ковра. Перемещение: тяните внутри ковра."
+                  : "Perspective: drag corner points. Move: drag inside the rug."}
+              </div>
             </div>
 
             <div className="text-xs text-gray-500">
               {isRu
-                ? "Перспектива настраивается перетаскиванием углов ковра на изображении."
-                : "Adjust perspective by dragging the rug corners on the canvas."}
+                ? "Если ковер не рисуется, откройте DevTools - Network и проверьте запрос /api/vr/product."
+                : "If the rug is not drawn, check DevTools - Network for /api/vr/product."}
             </div>
           </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default VrPreview;
+}

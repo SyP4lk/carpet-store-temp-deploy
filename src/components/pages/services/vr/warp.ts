@@ -1,42 +1,35 @@
 export type Point = { x: number; y: number };
-export type Quad = { tl: Point; tr: Point; br: Point; bl: Point };
+export type Quad = [Point, Point, Point, Point]; // TL, TR, BR, BL
 
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+function affineFromTriangles(
+  s0: Point,
+  s1: Point,
+  s2: Point,
+  d0: Point,
+  d1: Point,
+  d2: Point
+) {
+  const sx0 = s0.x, sy0 = s0.y;
+  const sx1 = s1.x, sy1 = s1.y;
+  const sx2 = s2.x, sy2 = s2.y;
 
-const interpolateQuad = (quad: Quad, u: number, v: number): Point => {
-  const topX = lerp(quad.tl.x, quad.tr.x, u);
-  const topY = lerp(quad.tl.y, quad.tr.y, u);
-  const bottomX = lerp(quad.bl.x, quad.br.x, u);
-  const bottomY = lerp(quad.bl.y, quad.br.y, u);
-  return {
-    x: lerp(topX, bottomX, v),
-    y: lerp(topY, bottomY, v),
-  };
-};
+  const dx0 = d0.x, dy0 = d0.y;
+  const dx1 = d1.x, dy1 = d1.y;
+  const dx2 = d2.x, dy2 = d2.y;
 
-const drawImageTriangle = (
-  ctx: CanvasRenderingContext2D,
-  img: HTMLImageElement,
-  sx0: number,
-  sy0: number,
-  sx1: number,
-  sy1: number,
-  sx2: number,
-  sy2: number,
-  dx0: number,
-  dy0: number,
-  dx1: number,
-  dy1: number,
-  dx2: number,
-  dy2: number
-) => {
   const denom = sx0 * (sy1 - sy2) + sx1 * (sy2 - sy0) + sx2 * (sy0 - sy1);
-  if (!denom) return;
+  if (Math.abs(denom) < 1e-6) {
+    return { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+  }
 
-  const a = (dx0 * (sy1 - sy2) + dx1 * (sy2 - sy0) + dx2 * (sy0 - sy1)) / denom;
-  const b = (dy0 * (sy1 - sy2) + dy1 * (sy2 - sy0) + dy2 * (sy0 - sy1)) / denom;
-  const c = (dx0 * (sx2 - sx1) + dx1 * (sx0 - sx2) + dx2 * (sx1 - sx0)) / denom;
-  const d = (dy0 * (sx2 - sx1) + dy1 * (sx0 - sx2) + dy2 * (sx1 - sx0)) / denom;
+  const a =
+    (dx0 * (sy1 - sy2) + dx1 * (sy2 - sy0) + dx2 * (sy0 - sy1)) / denom;
+  const b =
+    (dy0 * (sy1 - sy2) + dy1 * (sy2 - sy0) + dy2 * (sy0 - sy1)) / denom;
+  const c =
+    (dx0 * (sx2 - sx1) + dx1 * (sx0 - sx2) + dx2 * (sx1 - sx0)) / denom;
+  const d =
+    (dy0 * (sx2 - sx1) + dy1 * (sx0 - sx2) + dy2 * (sx1 - sx0)) / denom;
   const e =
     (dx0 * (sx1 * sy2 - sx2 * sy1) +
       dx1 * (sx2 * sy0 - sx0 * sy2) +
@@ -48,87 +41,123 @@ const drawImageTriangle = (
       dy2 * (sx0 * sy1 - sx1 * sy0)) /
     denom;
 
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(dx0, dy0);
-  ctx.lineTo(dx1, dy1);
-  ctx.lineTo(dx2, dy2);
-  ctx.closePath();
-  ctx.clip();
-  ctx.setTransform(a, b, c, d, e, f);
-  ctx.drawImage(img, 0, 0);
-  ctx.restore();
-};
+  return { a, b, c, d, e, f };
+}
 
-export const drawImageToQuad = (
+function bilinearPoint(quad: Quad, u: number, v: number): Point {
+  const [p00, p10, p11, p01] = quad;
+  const x =
+    (1 - u) * (1 - v) * p00.x +
+    u * (1 - v) * p10.x +
+    u * v * p11.x +
+    (1 - u) * v * p01.x;
+  const y =
+    (1 - u) * (1 - v) * p00.y +
+    u * (1 - v) * p10.y +
+    u * v * p11.y +
+    (1 - u) * v * p01.y;
+  return { x, y };
+}
+
+export function drawShadow(
+  ctx: CanvasRenderingContext2D,
+  quad: Quad,
+  intensity: number
+) {
+  if (intensity <= 0) return;
+
+  ctx.save();
+  ctx.globalAlpha = Math.min(0.65, intensity / 100);
+  ctx.filter = `blur(${Math.max(2, intensity / 8)}px)`;
+  ctx.fillStyle = "rgba(0,0,0,1)";
+  ctx.beginPath();
+  ctx.moveTo(quad[0].x, quad[0].y);
+  ctx.lineTo(quad[1].x, quad[1].y);
+  ctx.lineTo(quad[2].x, quad[2].y);
+  ctx.lineTo(quad[3].x, quad[3].y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+export function drawImageToQuad(
   ctx: CanvasRenderingContext2D,
   img: HTMLImageElement,
   quad: Quad,
-  gridSize = 16
-) => {
-  const cols = Math.max(2, gridSize);
-  const rows = Math.max(2, gridSize);
-  const sw = img.width;
-  const sh = img.height;
+  grid = 16
+) {
+  const sw = img.naturalWidth || img.width;
+  const sh = img.naturalHeight || img.height;
 
-  for (let y = 0; y < rows; y += 1) {
-    for (let x = 0; x < cols; x += 1) {
-      const u0 = x / cols;
-      const v0 = y / rows;
-      const u1 = (x + 1) / cols;
-      const v1 = (y + 1) / rows;
+  for (let j = 0; j < grid; j++) {
+    for (let i = 0; i < grid; i++) {
+      const u0 = i / grid;
+      const v0 = j / grid;
+      const u1 = (i + 1) / grid;
+      const v1 = (j + 1) / grid;
 
-      const p00 = interpolateQuad(quad, u0, v0);
-      const p10 = interpolateQuad(quad, u1, v0);
-      const p11 = interpolateQuad(quad, u1, v1);
-      const p01 = interpolateQuad(quad, u0, v1);
+      const p00 = bilinearPoint(quad, u0, v0);
+      const p10 = bilinearPoint(quad, u1, v0);
+      const p11 = bilinearPoint(quad, u1, v1);
+      const p01 = bilinearPoint(quad, u0, v1);
 
       const sx0 = u0 * sw;
       const sy0 = v0 * sh;
       const sx1 = u1 * sw;
       const sy1 = v1 * sh;
 
-      drawImageTriangle(ctx, img, sx0, sy0, sx1, sy0, sx1, sy1, p00.x, p00.y, p10.x, p10.y, p11.x, p11.y);
-      drawImageTriangle(ctx, img, sx0, sy0, sx1, sy1, sx0, sy1, p00.x, p00.y, p11.x, p11.y, p01.x, p01.y);
+      // tri 1
+      {
+        const s0 = { x: sx0, y: sy0 };
+        const s1 = { x: sx1, y: sy0 };
+        const s2 = { x: sx1, y: sy1 };
+        const t = affineFromTriangles(s0, s1, s2, p00, p10, p11);
+
+        ctx.save();
+        ctx.setTransform(t.a, t.b, t.c, t.d, t.e, t.f);
+        ctx.beginPath();
+        ctx.moveTo(s0.x, s0.y);
+        ctx.lineTo(s1.x, s1.y);
+        ctx.lineTo(s2.x, s2.y);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(img, 0, 0);
+        ctx.restore();
+      }
+
+      // tri 2
+      {
+        const s0 = { x: sx0, y: sy0 };
+        const s1 = { x: sx1, y: sy1 };
+        const s2 = { x: sx0, y: sy1 };
+        const t = affineFromTriangles(s0, s1, s2, p00, p11, p01);
+
+        ctx.save();
+        ctx.setTransform(t.a, t.b, t.c, t.d, t.e, t.f);
+        ctx.beginPath();
+        ctx.moveTo(s0.x, s0.y);
+        ctx.lineTo(s1.x, s1.y);
+        ctx.lineTo(s2.x, s2.y);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(img, 0, 0);
+        ctx.restore();
+      }
     }
   }
-};
+}
 
-const pointInTriangle = (p: Point, a: Point, b: Point, c: Point) => {
-  const area = (x1: Point, x2: Point, x3: Point) =>
-    (x1.x * (x2.y - x3.y) + x2.x * (x3.y - x1.y) + x3.x * (x1.y - x2.y)) / 2;
+export function pointInQuad(p: Point, quad: Quad): boolean {
+  const pts = quad;
+  let inside = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const xi = pts[i].x, yi = pts[i].y;
+    const xj = pts[j].x, yj = pts[j].y;
 
-  const areaTotal = Math.abs(area(a, b, c));
-  const area1 = Math.abs(area(p, b, c));
-  const area2 = Math.abs(area(a, p, c));
-  const area3 = Math.abs(area(a, b, p));
-  return Math.abs(areaTotal - (area1 + area2 + area3)) < 0.5;
-};
-
-export const pointInQuad = (point: Point, quad: Quad) => {
-  return (
-    pointInTriangle(point, quad.tl, quad.tr, quad.br) ||
-    pointInTriangle(point, quad.tl, quad.br, quad.bl)
-  );
-};
-
-export const drawShadow = (ctx: CanvasRenderingContext2D, quad: Quad, strengthPct = 30) => {
-  const clamped = Math.min(Math.max(strengthPct, 0), 100) / 100;
-  if (clamped <= 0) return;
-
-  const offset = 8 * clamped;
-  const blur = 16 * clamped + 2;
-
-  ctx.save();
-  ctx.globalAlpha = 0.35 * clamped;
-  ctx.filter = `blur(${blur}px)`;
-  ctx.fillStyle = "#000";
-  ctx.beginPath();
-  ctx.moveTo(quad.tl.x, quad.tl.y + offset);
-  ctx.lineTo(quad.tr.x, quad.tr.y + offset);
-  ctx.lineTo(quad.br.x, quad.br.y + offset);
-  ctx.lineTo(quad.bl.x, quad.bl.y + offset);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
-};
+    const intersect =
+      yi > p.y !== yj > p.y &&
+      p.x < ((xj - xi) * (p.y - yi)) / (yj - yi + 1e-9) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
