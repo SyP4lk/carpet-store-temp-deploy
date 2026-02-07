@@ -26,6 +26,7 @@ const ProductDetails: FC<ProductDetailsProps> = async ({ params }) => {
   const dictionary = await getDictionary(locale);
 
   const currentRug = await getProductById(Number(rugId));
+  const collectionLabel = currentRug?.collection?.[locale] || "";
 
   // Early return if rug not found
   if (!currentRug) {
@@ -50,7 +51,7 @@ const ProductDetails: FC<ProductDetailsProps> = async ({ params }) => {
   // Получаем рекомендации на основе цветов ниток и цены (до 300 уникальных товаров без дубликатов)
   const recommendations = getRecommendations(currentRug, allProducts, 300);
 
-  const baseUrl = "https://www.koenigcarpet.ru";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://koenigcarpet.ru";
   const productName = currentRug.product_name?.[locale];
   const description = currentRug.description?.[locale];
 
@@ -59,6 +60,7 @@ const ProductDetails: FC<ProductDetailsProps> = async ({ params }) => {
       <Banner
         filter={dictionary.shared.rugDetail}
         image="/static/image1.png"
+        subtitle={collectionLabel || undefined}
       />
       <div className="flex flex-col md:flex-row">
         <div className="w-full md:w-2/5 p-2">
@@ -165,7 +167,7 @@ export default ProductDetails;
 export async function generateMetadata({
   params,
 }: ProductDetailsProps): Promise<Metadata> {
-  const baseUrl = "https://www.koenigcarpet.ru";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://koenigcarpet.ru";
   const pathParams = await params;
   const locale = pathParams.locale;
   const rugId = pathParams.rugId;

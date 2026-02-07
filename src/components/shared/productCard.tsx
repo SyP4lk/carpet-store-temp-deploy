@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Heart } from "lucide-react";
 import { FC, useState, useRef, useEffect, useMemo } from "react";
@@ -175,7 +175,7 @@ const ProductCard: FC<Props> = ({ product }) => {
   : locale === 'en'
     ? 'Add to Cart'
     : locale === 'ru'
-      ? 'Р’ РєРѕСЂР·РёРЅСѓ'
+      ? 'В корзину'
       : 'Sepete Ekle'}
           </button>
           <AdminStockButton productCode={product.product_code} />

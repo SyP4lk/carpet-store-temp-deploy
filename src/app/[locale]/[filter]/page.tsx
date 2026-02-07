@@ -10,6 +10,7 @@ import { Locale } from "@/localization/config"
 import { getDictionary } from "@/localization/dictionary"
 import { RugProduct } from "@/types/product";
 import { getAllProducts } from "@/lib/products";
+import type { Metadata } from "next";
 
 
 type RugsPageProps = {
@@ -114,6 +115,49 @@ const RugsPage: FC<RugsPageProps> = async ({ params, searchParams }) => {
 };
 
 export default RugsPage;
+
+export async function generateMetadata({
+  params,
+}: RugsPageProps): Promise<Metadata> {
+  const { filter, locale } = await params;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://koenigcarpet.ru";
+  const dict = await getDictionary(locale);
+  const category = dict.home.categories.find((item) => "/" + filter === item.path);
+
+  const title =
+    category?.title || (locale === "ru" ? "Каталог ковров" : "Rug catalog");
+  const description =
+    category?.description ||
+    (locale === "ru"
+      ? "Выберите ковры по коллекции, стилю, цвету и размеру."
+      : "Browse rugs by collection, style, color, and size.");
+
+  const url = `${baseUrl}/${locale}/${filter}`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: url,
+    },
+    openGraph: {
+      title,
+      description,
+      url,
+      type: "website",
+      images: [
+        {
+          url: `${baseUrl}/og-image.png`,
+          width: 1200,
+          height: 630,
+          alt: "Koenig Carpet",
+        },
+      ],
+      locale,
+      siteName: "Koenig Carpet",
+    },
+  };
+}
 
 // ISR: Кешировать страницу на 1 час (3600 секунд)
 // Обновление произойдет автоматически или при вызове revalidatePath()

@@ -1,7 +1,8 @@
-﻿import Banner from "@/components/shared/banner";
+import Banner from "@/components/shared/banner";
 import Footer from "@/components/shared/footer";
 import LeadForm from "@/components/pages/services/LeadForm";
 import { Locale } from "@/localization/config";
+import type { Metadata } from "next";
 import { use } from "react";
 import Image from "next/image";
 
@@ -16,19 +17,18 @@ export default function DemonstrationPage({ params }: Props) {
     ? ["Выбор", "Заявка", "Выезд", "Оплата"]
     : ["Select", "Request", "Visit", "Checkout"];
 
-
   const demoSteps = isRu
     ? [
-        "Выберите несколько ковров сами или вместе с нашим консультантом. На сайте или в магазине. Обратите внимание, что каждый ковёр должен стоить не менее 30000 рублей.",
-        "Оформите заказ через корзину на сайте или оставьте заявку на демонстрацию ковров. Наш консультант свяжется с вами.",
-        "Выберите удобное время, и эксперт-декоратор привезёт ковры к вам домой, расстелет ковры, расставит мебель, поможет определиться с выбором.",
-        "Оставьте и оплатите ковры, которые вам понравились. Остальные мы бесплатно вернем в магазин.",
+        "Выберите несколько ковров самостоятельно или вместе с консультантом. Каждый ковер должен стоить не менее 30000 рублей.",
+        "Оставьте заявку на демонстрацию или оформите заказ через корзину. Мы свяжемся с вами.",
+        "Эксперт-декоратор привезет ковры, расстелет и поможет сравнить варианты.",
+        "Оставьте понравившиеся ковры и оплатите. Остальные мы вернем бесплатно.",
       ]
     : [
-        "Choose several rugs yourself or together with our consultant. On the website or in the store. Please note that each rug must cost at least 30,000 rubles.",
-        "Place an order through the website cart or leave a request for a rug demo. Our consultant will contact you.",
-        "Choose a convenient time, and an expert decorator will bring the rugs to your home, lay them out, arrange the furniture, and help you decide.",
-        "Keep and pay for the rugs you like. We will return the rest to the store for free.",
+        "Choose several rugs yourself or with our consultant. Each rug should cost at least 30,000 rubles.",
+        "Submit a demo request or place an order via the cart. We will contact you.",
+        "An expert decorator brings the rugs, lays them out, and helps you compare.",
+        "Keep and pay for the rugs you like. We return the rest for free.",
       ];
 
   const demoImages = [
@@ -53,54 +53,84 @@ export default function DemonstrationPage({ params }: Props) {
   const benefits = isRu
     ? [
         {
-          t: "Выбор из 3-х вариантов",
-          d: "До трех ковров для сравнения, каждый стоимостью от 30000 рублей.",
+          t: "До 3 вариантов",
+          d: "Выбирайте до трех ковров для сравнения.",
         },
         {
           t: "Любые размеры",
-          d: "Сравните, как разные размеры смотрятся именно в вашем интерьере.",
+          d: "Проверьте, как размер смотрится именно в вашем интерьере.",
         },
         {
-          t: "Выезд профессионального декоратора",
-          d: "Эксперт поможет подобрать ковры под стиль и расстановку мебели.",
+          t: "Эксперт-декоратор",
+          d: "Поможет подобрать по стилю и мебели.",
         },
         {
-          t: "Совершенно бесплатно",
-          d: "Доставка, демонстрация и обратный вывоз - бесплатно.",
+          t: "Бесплатно",
+          d: "Доставка, демонстрация и вывоз - бесплатно.",
         },
         {
           t: "В комфортной обстановке",
-          d: "Вы выбираете без спешки у себя дома.",
+          d: "Вы выбираете дома, без спешки.",
         },
         {
-          t: "Тактильное удовольствие",
-          d: "Потрогайте ворс и оцените фактуру вживую.",
+          t: "Тактильное сравнение",
+          d: "Оцените ворс и фактуру вживую.",
         },
       ]
     : [
         {
-          t: "Choose from 3 options",
-          d: "Up to three rugs to compare, each priced from 30,000 rubles.",
+          t: "Up to 3 options",
+          d: "Compare up to three rugs.",
         },
         {
           t: "Any sizes",
-          d: "See how different sizes look in your own interior.",
+          d: "See how sizes look in your interior.",
         },
         {
-          t: "Professional decorator visit",
-          d: "An expert helps select rugs for the style and furniture layout.",
+          t: "Expert decorator",
+          d: "Helps match style and furniture layout.",
         },
         {
-          t: "Completely free",
+          t: "Free of charge",
           d: "Delivery, demo, and pickup are free.",
         },
         {
-          t: "In a comfortable setting",
-          d: "Choose at home without rush.",
+          t: "Comfortable setting",
+          d: "Make the decision at home without rush.",
         },
         {
-          t: "Tactile pleasure",
-          d: "Feel the pile and assess the texture in person.",
+          t: "Tactile comparison",
+          d: "Feel the pile and texture in person.",
+        },
+      ];
+
+  const faq = isRu
+    ? [
+        {
+          q: "Сколько ковров можно взять на демонстрацию?",
+          a: "До трех ковров из наличия.",
+        },
+        {
+          q: "Сколько стоит услуга?",
+          a: "Демонстрация бесплатная при стоимости ковров от 30000 рублей.",
+        },
+        {
+          q: "В какие дни возможен выезд?",
+          a: "Мы согласуем удобное время после заявки.",
+        },
+      ]
+    : [
+        {
+          q: "How many rugs can I try?",
+          a: "Up to three rugs from stock.",
+        },
+        {
+          q: "Is the service paid?",
+          a: "The demo is free for rugs priced from 30,000 rubles.",
+        },
+        {
+          q: "When can the visit happen?",
+          a: "We agree on a convenient time after your request.",
         },
       ];
 
@@ -116,30 +146,26 @@ export default function DemonstrationPage({ params }: Props) {
             </h1>
             <p className="mt-3 text-gray-700 leading-relaxed">
               {isRu
-                ? "Привезем несколько подходящих вариантов, чтобы вы увидели ковер в своем интерьере и приняли решение без спешки."
-                : "We can bring several suitable options so you can see the rug in your interior and decide comfortably."}
+                ? "Привезем несколько вариантов, чтобы вы увидели ковер в своем интерьере и приняли решение спокойно."
+                : "We bring several options so you can see the rug in your interior and decide comfortably."}
             </p>
 
             <div className="mt-10">
               <h2 className="text-2xl font-bold">{isRu ? "Как проходит демонстрация" : "How the demo works"}</h2>
               <div className="mt-6 relative">
-                  {/* Линия проходит через центр кружков */}
-                  <div className="absolute left-0 right-0 top-5 h-px bg-gray-200" />
+                <div className="absolute left-0 right-0 top-5 h-px bg-gray-200" />
 
-                  <div className="grid grid-cols-4 gap-2">
-                    {stepShort.map((label, i) => (
-                      <div key={i} className="flex flex-col items-center text-center relative z-10">
-                        <div className="w-10 h-10 rounded-full border border-gray-300 bg-white flex items-center justify-center text-sm font-semibold text-gray-900">
-                          {i + 1}
-                        </div>
-                        <div className="mt-2 text-xs text-gray-600">{label}</div>
+                <div className="grid grid-cols-4 gap-2">
+                  {stepShort.map((label, i) => (
+                    <div key={i} className="flex flex-col items-center text-center relative z-10">
+                      <div className="w-10 h-10 rounded-full border border-gray-300 bg-white flex items-center justify-center text-sm font-semibold text-gray-900">
+                        {i + 1}
                       </div>
-                    ))}
-                  </div>
+                      <div className="mt-2 text-xs text-gray-600">{label}</div>
+                    </div>
+                  ))}
                 </div>
-
-
-        
+              </div>
 
               <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 {demoSteps.map((text, i) => (
@@ -164,7 +190,7 @@ export default function DemonstrationPage({ params }: Props) {
 
             <div className="mt-12">
               <h2 className="text-2xl font-bold">
-                {isRu ? "Каких ошибок поможет избежать демонстрация?" : "What mistakes does the home demo help you avoid?"}
+                {isRu ? "Каких ошибок поможет избежать демонстрация?" : "What mistakes does the demo help avoid?"}
               </h2>
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {mistakes.map((item, i) => (
@@ -176,8 +202,8 @@ export default function DemonstrationPage({ params }: Props) {
               </div>
               <p className="mt-4 text-gray-700">
                 {isRu
-                  ? "Эти ошибки выбора полностью исключены с нашей бесплатной услугой демонстрации ковров у вас дома!"
-                  : "These selection mistakes are completely eliminated with our free at-home rug demo!"}
+                  ? "Эти ошибки практически исключены, если сравнить ковры дома."
+                  : "These mistakes are largely avoided when you compare rugs at home."}
               </p>
             </div>
 
@@ -192,12 +218,28 @@ export default function DemonstrationPage({ params }: Props) {
                 ))}
               </div>
             </div>
+
+            <div className="mt-12">
+              <h2 className="text-2xl font-bold">FAQ</h2>
+              <div className="mt-4 space-y-4">
+                {faq.map((item, i) => (
+                  <div key={i} className="bg-gray-50 border border-gray-200 rounded-xl p-5">
+                    <p className="font-semibold text-gray-900">{item.q}</p>
+                    <p className="mt-2 text-sm text-gray-600">{item.a}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div>
             <LeadForm
               title={isRu ? "Записаться на демонстрацию" : "Book a demo"}
-              subtitle={isRu ? "Оставьте контакты - согласуем город, адрес и удобное время." : "Leave your contacts - we will confirm city, address and time."}
+              subtitle={
+                isRu
+                  ? "Оставьте контакты, согласуем город, адрес и время."
+                  : "Leave your contacts and we will confirm city, address, and time."
+              }
               source="DEMO"
               withCity
               withComment
@@ -209,4 +251,40 @@ export default function DemonstrationPage({ params }: Props) {
       <Footer />
     </>
   );
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const locale = (await params).locale as Locale;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://koenigcarpet.ru";
+  const url = `${baseUrl}/${locale}/demonstration`;
+
+  const title = locale === "ru" ? "Демонстрация ковров" : "Home demonstration";
+  const description =
+    locale === "ru"
+      ? "Бесплатная демонстрация ковров у вас дома. Сравните несколько вариантов и выберите лучший."
+      : "Free rug demonstration at home. Compare several options and choose the best.";
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: url,
+    },
+    openGraph: {
+      title,
+      description,
+      url,
+      type: "website",
+      images: [
+        {
+          url: `${baseUrl}/og-image.png`,
+          width: 1200,
+          height: 630,
+          alt: "Koenig Carpet",
+        },
+      ],
+      locale,
+      siteName: "Koenig Carpet",
+    },
+  };
 }

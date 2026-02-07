@@ -61,6 +61,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const locale = (await params).locale as Locale;
   const dictionary = await getDictionary(locale);
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://koenigcarpet.ru";
 
   return {
     title: {
@@ -75,7 +76,7 @@ export async function generateMetadata({
     openGraph: {
       title: dictionary.meta.openGraph.title,
       description: dictionary.meta.openGraph.description,
-      url: `https://www.koenigcarpet.ru/${locale}`,
+      url: `${baseUrl}/${locale}`,
       siteName: "Koenig Carpet",
       images: [
         {
@@ -95,10 +96,10 @@ export async function generateMetadata({
       images: [dictionary.meta.twitter.image],
     },
     alternates: {
-      canonical: `https://www.koenigcarpet.ru/${locale}`,
+      canonical: `${baseUrl}/${locale}`,
       languages: {
-        en: "https://www.koenigcarpet.ru/en",
-        ru: "https://www.koenigcarpet.ru/ru",
+        en: `${baseUrl}/en`,
+        ru: `${baseUrl}/ru`,
       },
     },
   };

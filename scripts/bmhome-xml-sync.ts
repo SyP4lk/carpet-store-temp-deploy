@@ -255,6 +255,30 @@ function getDefaultFeaturesTemplate(): DefaultFeaturesTemplate {
 
 const SIZE_REGEX = /(\d+(?:\.\d+)?)\s*[x\u00d7\u0445]\s*(\d+(?:\.\d+)?)/i
 
+function parseSizeSides(sizeLabel: string): { w: number; h: number } | null {
+  if (!sizeLabel) return null
+  const cleaned = sizeLabel.replace(/cm/gi, '').trim()
+  const match = cleaned.match(SIZE_REGEX)
+  if (!match) return null
+  const w = Number(match[1])
+  const h = Number(match[2])
+  if (!Number.isFinite(w) || !Number.isFinite(h)) return null
+  if (w <= 0 || h <= 0) return null
+  return { w, h }
+}
+
+function isRunnerSizeLabel(sizeLabel: string): boolean {
+  const sides = parseSizeSides(sizeLabel)
+  if (!sides) return false
+  const minSide = Math.min(sides.w, sides.h)
+  const maxSide = Math.max(sides.w, sides.h)
+  return minSide <= 80 && maxSide >= 150
+}
+
+function isRunnersFromSizes(sizes: string[]): boolean {
+  return sizes.some((size) => isRunnerSizeLabel(size))
+}
+
 function parseSizeArea(size: string): number {
   const cleaned = size.replace(/cm/gi, '').trim()
   const match = cleaned.match(SIZE_REGEX)
@@ -327,6 +351,11 @@ function buildBmhomeTranslationHash(data: {
     collections?: string[]
     styles?: string[]
   }
+  taxonomyDisplay?: {
+    colors?: string[]
+    collections?: string[]
+    styles?: string[]
+  }
 }): string {
   const payload = JSON.stringify({
     shortHtml: data.shortHtml ?? '',
@@ -343,6 +372,11 @@ function buildBmhomeTranslationHash(data: {
       colors: data.taxonomy?.colors ?? [],
       collections: data.taxonomy?.collections ?? [],
       styles: data.taxonomy?.styles ?? [],
+    },
+    taxonomyDisplay: {
+      colors: data.taxonomyDisplay?.colors ?? [],
+      collections: data.taxonomyDisplay?.collections ?? [],
+      styles: data.taxonomyDisplay?.styles ?? [],
     },
   })
   return createHash('sha256').update(payload).digest('hex')
@@ -393,6 +427,7 @@ function slugify(value: string): string {
 type BmhomeTaxonomyMappingEntry = {
   by_raw?: Record<string, string>
   by_norm?: Record<string, string>
+  display_ru_by_value?: Record<string, string>
 }
 
 type BmhomeTaxonomyMapping = Record<string, BmhomeTaxonomyMappingEntry>
@@ -429,6 +464,19 @@ function mapTaxonomyValue(
   }
 
   return slugify(trimmed)
+}
+
+function mapTaxonomyDisplayName(
+  type: 'color' | 'style' | 'collection',
+  locale: 'ru' | 'en',
+  value: string | null,
+  fallbackName: string
+): string {
+  if (!fallbackName) return fallbackName
+  if (locale !== 'ru') return fallbackName
+  const mapping = loadBmhomeTaxonomyMapping()
+  const display = value ? mapping[type]?.display_ru_by_value?.[value] : undefined
+  return display || fallbackName
 }
 
 function getUsdToEurRate(value: number | null | undefined): number {
@@ -714,6 +762,7 @@ async function main() {
     const sizeVariants = parsedVariants
     const sizes = sizeVariants.map((variant) => variant.sizeLabel as string)
     const uniqueSizes = Array.from(new Set(sizes))
+    const computedIsRunners = isRunnersFromSizes(uniqueSizes)
 
     const specialVariant = parsedVariants.find((variant) => variant.isSpecialSize)
     const defaultSize = baseVariant?.sizeLabel ?? specialVariant?.sizeLabel ?? uniqueSizes[0]
@@ -780,6 +829,16 @@ async function main() {
     const collectionName = (detailMap.get('COLLECTION') || '').trim()
     const collectionValue = collectionName ? mapTaxonomyValue('collection', collectionName) : null
 
+    const colorDisplayRu = colorName
+      ? mapTaxonomyDisplayName('color', 'ru', colorValue, colorName)
+      : ''
+    const styleDisplayRu = styleName
+      ? mapTaxonomyDisplayName('style', 'ru', styleValue, styleName)
+      : ''
+    const collectionDisplayRu = collectionName
+      ? mapTaxonomyDisplayName('collection', 'ru', collectionValue, collectionName)
+      : ''
+
 
     // XML -> model mapping:
     // UrunKartiID -> productCode (external ID), UrunAdi -> productNames,
@@ -824,6 +883,11 @@ async function main() {
         colors: colorName ? [colorName] : [],
         styles: styleName ? [styleName] : [],
         collections: collectionName ? [collectionName] : [],
+      },
+      taxonomyDisplay: {
+        colors: colorDisplayRu ? [colorDisplayRu] : [],
+        styles: styleDisplayRu ? [styleDisplayRu] : [],
+        collections: collectionDisplayRu ? [collectionDisplayRu] : [],
       },
     })
     const hasRuDescription = (existing?.descriptions?.length ?? 0) > 0
@@ -900,7 +964,7 @@ async function main() {
       images: finalImages,
       inStock,
       isNew: false,
-      isRunners: false,
+      isRunners: computedIsRunners,
       source: ProductSource.BMHOME,
       sourceMeta,
     }
@@ -966,7 +1030,7 @@ async function main() {
                 ? [
                     { locale: 'en', name: colorName, value: colorValue || slugify(colorName) },
                     ...(shouldUpdateTaxonomyRu
-                      ? [{ locale: 'ru', name: colorName, value: colorValue || slugify(colorName) }]
+                      ? [{ locale: 'ru', name: colorDisplayRu || colorName, value: colorValue || slugify(colorName) }]
                       : []),
                   ]
                 : [],
@@ -977,7 +1041,13 @@ async function main() {
                 ? [
                     { locale: 'en', name: collectionName, value: collectionValue || slugify(collectionName) },
                     ...(shouldUpdateTaxonomyRu
-                      ? [{ locale: 'ru', name: collectionName, value: collectionValue || slugify(collectionName) }]
+                      ? [
+                          {
+                            locale: 'ru',
+                            name: collectionDisplayRu || collectionName,
+                            value: collectionValue || slugify(collectionName),
+                          },
+                        ]
                       : []),
                   ]
                 : [],
@@ -988,7 +1058,7 @@ async function main() {
                 ? [
                     { locale: 'en', name: styleName, value: styleValue || slugify(styleName) },
                     ...(shouldUpdateTaxonomyRu
-                      ? [{ locale: 'ru', name: styleName, value: styleValue || slugify(styleName) }]
+                      ? [{ locale: 'ru', name: styleDisplayRu || styleName, value: styleValue || slugify(styleName) }]
                       : []),
                   ]
                 : [],
@@ -1032,7 +1102,7 @@ async function main() {
               create: colorName
                 ? [
                     { locale: 'en', name: colorName, value: colorValue || slugify(colorName) },
-                    { locale: 'ru', name: colorName, value: colorValue || slugify(colorName) },
+                    { locale: 'ru', name: colorDisplayRu || colorName, value: colorValue || slugify(colorName) },
                   ]
                 : [],
             },
@@ -1040,7 +1110,11 @@ async function main() {
               create: collectionName
                 ? [
                     { locale: 'en', name: collectionName, value: collectionValue || slugify(collectionName) },
-                    { locale: 'ru', name: collectionName, value: collectionValue || slugify(collectionName) },
+                    {
+                      locale: 'ru',
+                      name: collectionDisplayRu || collectionName,
+                      value: collectionValue || slugify(collectionName),
+                    },
                   ]
                 : [],
             },
@@ -1048,7 +1122,7 @@ async function main() {
               create: styleName
                 ? [
                     { locale: 'en', name: styleName, value: styleValue || slugify(styleName) },
-                    { locale: 'ru', name: styleName, value: styleValue || slugify(styleName) },
+                    { locale: 'ru', name: styleDisplayRu || styleName, value: styleValue || slugify(styleName) },
                   ]
                 : [],
             },

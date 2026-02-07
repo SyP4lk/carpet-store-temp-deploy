@@ -1,8 +1,9 @@
-﻿import Banner from "@/components/shared/banner";
+import Banner from "@/components/shared/banner";
 import Footer from "@/components/shared/footer";
 import LeadForm from "@/components/pages/services/LeadForm";
 import ContactWays from "@/components/sections/ContactWays";
 import { Locale } from "@/localization/config";
+import type { Metadata } from "next";
 import { use } from "react";
 
 type Props = { params: Promise<{ locale: string }> };
@@ -13,65 +14,101 @@ export default function DesignerPage({ params }: Props) {
 
   const introLines = isRu
     ? [
-        "Свяжитесь с нами по вопросам программы лояльности",
-        "Мы сотрудничаем с дизайнерами и декораторами",
-        "Подберём идеальный ковёр под концепт вашего проекта. Заказчик останется доволен интерьером и нашим высоким уровнем сервиса.",
+        "Программа для дизайнеров и декораторов.",
+        "Подбираем ковры под концепцию проекта и бюджет.",
+        "Помогаем с демонстрацией и примеркой в интерьере.",
       ]
     : [
-        "Contact us about the loyalty program",
-        "We work with designers and decorators",
-        "We will select the perfect rug for your project concept. Your client will love the interior and our high level of service.",
+        "A program for designers and decorators.",
+        "We select rugs for your project concept and budget.",
+        "We help with demonstrations and interior try-ons.",
       ];
+
+  const steps = isRu
+    ? ["Бриф и требования", "Подбор моделей", "Демонстрация", "Согласование и заказ"]
+    : ["Brief and requirements", "Model selection", "Demonstration", "Approval and order"];
 
   const blocks = isRu
     ? [
         {
-          t: "Посетите наш салон ковров в Русской Европе.",
-          d: "Ковры можно потрогать и увидеть вживую, убедиться в их качестве и колористике. Персональный менеджер расскажет всё о коврах и поможет подобрать эксклюзивные модели для вашего проекта.",
+          t: "Салон в Русской Европе",
+          d: "Ковры можно посмотреть и потрогать вживую, оценить качество и палитру.",
         },
         {
-          t: "В наличии более 100 ковров. В дизайне более 1600 вариантов.",
+          t: "Более 100 ковров в наличии",
+          d: "Быстрые сроки под проекты и съемки.",
         },
         {
-          t: "Закажите ковры для фотосъемки",
-          d: "Привезём ковры для фотосессии в вашем проекте бесплатно, расстелем в интерьере и сами заберём после съёмки.",
+          t: "Ковры для фотосъемки",
+          d: "Привезем, расстелем и заберем после съемки.",
         },
         {
-          t: "Закажите демонстрацию ковров в интерьере",
-          d: "Уникальная услуга поможет сравнить несколько ковров в интерьере заказчика и выбрать лучший вариант для вашего проекта. Привезём ковры бесплатно и в удобное для вас время.",
+          t: "Демонстрация в интерьере",
+          d: "Сравните несколько ковров у клиента дома.",
         },
         {
-          t: "Воспользуйтесь услугами экспертов-декораторов",
-          d: "Наши эксперты по коврам всё сделают сами: изучат проект и проведут первичный отбор моделей по вашему техническому заданию, сэкономив ваше время и силы. Вам останется только утвердить подборку ковров.",
+          t: "Экспертный подбор",
+          d: "Подберем варианты по стилю, фактуре и бюджету.",
         },
         {
-          t: "Создайте уникальный ковёр в Ателье",
-          d: "Художники разработают персональный дизайн ковра под ваш проект с учётом пожеланий по стилю, цвету, фактуре, материалам и рисунку. Фотоотчёты позволят вам контролировать создание ковра на всех этапах.",
+          t: "Индивидуальное ателье",
+          d: "Разработаем уникальный дизайн под ваш проект.",
         },
       ]
     : [
         {
-          t: "Visit our rug salon in Russkaya Evropa.",
-          d: "You can see and touch the rugs in person, check their quality and colors. A personal manager will tell you everything about the rugs and help select exclusive models for your project.",
+          t: "Rug salon in Russkaya Evropa",
+          d: "See and touch rugs in person, check quality and palette.",
         },
         {
-          t: "Over 100 rugs in stock. More than 1600 design options.",
+          t: "Over 100 rugs in stock",
+          d: "Fast lead times for projects and shoots.",
         },
         {
-          t: "Order rugs for a photo shoot",
-          d: "We will bring rugs for your project photo shoot for free, lay them out in the interior, and pick them up after the shoot.",
+          t: "Rugs for photo shoots",
+          d: "We deliver, lay out, and pick up after the shoot.",
         },
         {
-          t: "Order a home rug demo",
-          d: "This unique service helps compare several rugs in the client's interior and choose the best option for your project. We bring the rugs for free at a time that suits you.",
+          t: "Home demonstration",
+          d: "Compare multiple rugs in the client's interior.",
         },
         {
-          t: "Use expert decorator services",
-          d: "Our rug experts will handle everything: review the project and do an initial selection based on your brief, saving your time and effort. You only need to approve the final selection.",
+          t: "Expert selection",
+          d: "We match style, texture, and budget.",
         },
         {
-          t: "Create a unique rug in the Atelier",
-          d: "Artists will develop a custom rug design for your project, taking into account style, color, texture, materials, and patterns. Photo updates let you monitor the rug creation at every stage.",
+          t: "Custom atelier",
+          d: "We design a unique rug for your project.",
+        },
+      ];
+
+  const faq = isRu
+    ? [
+        {
+          q: "Есть ли комиссия для дизайнеров?",
+          a: "Да, условия обсуждаются индивидуально по проекту.",
+        },
+        {
+          q: "Можно ли взять ковры на примерку?",
+          a: "Да, доступна демонстрация в интерьере.",
+        },
+        {
+          q: "Сколько времени занимает подбор?",
+          a: "Обычно 1-3 дня в зависимости от брифа.",
+        },
+      ]
+    : [
+        {
+          q: "Is there a designer commission?",
+          a: "Yes, terms are discussed individually per project.",
+        },
+        {
+          q: "Can we take rugs for a try-on?",
+          a: "Yes, home demonstration is available.",
+        },
+        {
+          q: "How fast is the selection?",
+          a: "Usually 1-3 days depending on the brief.",
         },
       ];
 
@@ -91,6 +128,18 @@ export default function DesignerPage({ params }: Props) {
               ))}
             </div>
 
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold">{isRu ? "Этапы работы" : "How we work"}</h2>
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+                {steps.map((step, i) => (
+                  <div key={i} className="bg-white border border-gray-200 rounded-xl p-4">
+                    <p className="text-xs font-semibold text-gray-500">{isRu ? "Шаг" : "Step"} {i + 1}</p>
+                    <p className="mt-1 font-semibold">{step}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
               {blocks.map((item, i) => (
                 <div key={i} className="bg-gray-50 border border-gray-200 rounded-xl p-5">
@@ -99,6 +148,18 @@ export default function DesignerPage({ params }: Props) {
                 </div>
               ))}
             </div>
+
+            <div className="mt-12">
+              <h2 className="text-2xl font-bold">FAQ</h2>
+              <div className="mt-4 space-y-4">
+                {faq.map((item, i) => (
+                  <div key={i} className="bg-gray-50 border border-gray-200 rounded-xl p-5">
+                    <p className="font-semibold text-gray-900">{item.q}</p>
+                    <p className="mt-2 text-sm text-gray-600">{item.a}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div>
@@ -106,8 +167,8 @@ export default function DesignerPage({ params }: Props) {
               title={isRu ? "Связаться с нами" : "Contact us"}
               subtitle={
                 isRu
-                  ? "Оставьте контакты - расскажем о программе лояльности и подберем формат сотрудничества."
-                  : "Leave your contacts - we will share the loyalty program details and propose a cooperation format."
+                  ? "Оставьте контакты, расскажем об условиях и поможем с подбором."
+                  : "Leave your contacts and we will share cooperation details."
               }
               source="DESIGNER"
               withCity
@@ -122,4 +183,40 @@ export default function DesignerPage({ params }: Props) {
       <Footer />
     </>
   );
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const locale = (await params).locale as Locale;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://koenigcarpet.ru";
+  const url = `${baseUrl}/${locale}/designer`;
+
+  const title = locale === "ru" ? "Программа для дизайнеров" : "Program for designers";
+  const description =
+    locale === "ru"
+      ? "Сотрудничество для дизайнеров и декораторов: подбор ковров, демонстрации, ателье."
+      : "Cooperation for designers and decorators: selection, demonstrations, and custom atelier.";
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: url,
+    },
+    openGraph: {
+      title,
+      description,
+      url,
+      type: "website",
+      images: [
+        {
+          url: `${baseUrl}/og-image.png`,
+          width: 1200,
+          height: 630,
+          alt: "Koenig Carpet",
+        },
+      ],
+      locale,
+      siteName: "Koenig Carpet",
+    },
+  };
 }

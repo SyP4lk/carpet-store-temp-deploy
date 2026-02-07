@@ -8,6 +8,7 @@ interface ProductWithNames extends Product {
 }
 
 export async function exportProductsToExcel(products: ProductWithNames[], eurToRubRate: number = 105): Promise<Buffer> {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://koenigcarpet.ru'
   const data = products.map(product => {
     const nameRu = product.productNames.find(n => n.locale === 'ru')?.name || ''
     const descriptionRu = product.descriptions.find(d => d.locale === 'ru')?.description || ''
@@ -31,11 +32,11 @@ export async function exportProductsToExcel(products: ProductWithNames[], eurToR
     const imageUrl = product.images[3]
       ? (product.images[3].startsWith('http')
           ? product.images[3]
-          : `https://www.koenigcarpet.ru${product.images[3]}`)
+          : `${baseUrl}${product.images[3]}`)
       : ''
 
     // Product page URL
-    const productUrl = `https://www.koenigcarpet.ru/ru/rugs/${product.id}`
+    const productUrl = `${baseUrl}/ru/rugs/${product.id}`
 
     return {
       'Наименование': nameRu,
@@ -110,6 +111,7 @@ export async function exportProductsToExcel(products: ProductWithNames[], eurToR
 }
 
 export async function exportProductsToExcelYandex(products: ProductWithNames[], eurToRubRate: number = 105): Promise<Buffer> {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://koenigcarpet.ru'
   const data = products.map(product => {
     const nameRu = product.productNames.find(n => n.locale === 'ru')?.name || ''
     const descriptionRu = product.descriptions.find(d => d.locale === 'ru')?.description || ''
@@ -131,11 +133,11 @@ export async function exportProductsToExcelYandex(products: ProductWithNames[], 
     const imageUrl = product.images[3]
       ? (product.images[3].startsWith('http')
           ? product.images[3]
-          : `https://www.koenigcarpet.ru${product.images[3]}`)
+          : `${baseUrl}${product.images[3]}`)
       : ''
 
     // Product page URL
-    const productUrl = `https://www.koenigcarpet.ru/ru/rugs/${product.id}`
+    const productUrl = `${baseUrl}/ru/rugs/${product.id}`
 
     return {
       'Категория': 'ковры',

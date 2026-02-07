@@ -12,12 +12,12 @@
     "openGraph": {
       "title": "Магазин ковров - Премиальные ковры онлайн",
       "description": "Покупайте премиальные ковры и коврики онлайн. Ручная работа, индивидуальные размеры и современные дизайны.",
-      "image": "https://www.koenigcarpet.ru/og-image.png"
+      "image": "https://koenigcarpet.ru/og-image.png"
     },
     "twitter": {
       "title": "Магазин ковров - Премиальные ковры онлайн",
       "description": "Покупайте премиальные ковры и коврики онлайн. Ручная работа, индивидуальные размеры и современные дизайны.",
-      "image": "https://www.koenigcarpet.ru/og-image.png"
+      "image": "https://koenigcarpet.ru/og-image.png"
     }
   },
   "header": {
@@ -104,12 +104,12 @@
       "openGraph": {
         "title": "Магазин ковров | Премиальные ковры и коврики",
         "description": "Откройте премиальные ковры и коврики разных размеров, цветов и дизайнов. Идеально для гостиной, спальни и офиса.",
-        "image": "https://www.koenigcarpet.ru/og-image.png"
+        "image": "https://koenigcarpet.ru/og-image.png"
       },
       "twitter": {
         "title": "Магазин ковров | Премиальные ковры и коврики",
         "description": "Покупайте премиальные ковры и коврики с современными и традиционными дизайнами.",
-        "image": "https://www.koenigcarpet.ru/og-image.png"
+        "image": "https://koenigcarpet.ru/og-image.png"
       }
     }
   },
@@ -225,6 +225,16 @@
       }
     ]
   },
+  "filter": {
+    "colors": {
+      "title": "Цвет",
+      "mobileTitle": "Цвет"
+    },
+    "collections": {
+      "title": "Коллекция",
+      "mobileTitle": "Коллекция"
+    }
+  },
   "shared": {
     "loadMore": "ПОКАЗАТЬ ЕЩЕ",
     "ourProjects": "НАШИ ПРОЕКТЫ",
@@ -242,7 +252,7 @@
     "sku": "Артикул",
     "copiedToClipboard": "Скопировано в буфер обмена!",
     "styles": "СТИЛИ",
-    "collections": "КОЛЛЕКЦИИ",
+    "collections": "Коллекция",
     "sizes": "РАЗМЕРЫ",
     "sortBy": "СОРТИРОВАТЬ ПО",
     "sortNameAsc": "НАЗВАНИЕ (А-Я)",
@@ -337,7 +347,7 @@
         "path": "/collection"
       },
       {
-        "title": "Цвета",
+        "title": "Цвет",
         "path": "/color",
         "children": [
           {
@@ -588,7 +598,7 @@
   },
   "searchComp": {
     "placeholder": "Поиск ковров...",
-    "colors": "Цвета",
+    "colors": "Цвет",
     "searching": "Поиск...",
     "unnamedProduct": "Продукт без названия",
     "noProducts": "Продукты не найдены по запросу \"{query}\"",

@@ -2,6 +2,7 @@ import { MetadataRoute } from "next";
 import { localeConfig } from "@/localization/config";
 
 export default function robots(): MetadataRoute.Robots {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://koenigcarpet.ru";
   const disallow: string[] = ["/admin", "/api"];
 
   for (const loc of localeConfig.locales) {
@@ -16,6 +17,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow,
       },
     ],
-    sitemap: "https://www.koenigcarpet.ru/sitemap.xml",
+    sitemap: `${baseUrl}/sitemap.xml`,
+    host: baseUrl,
   };
 }

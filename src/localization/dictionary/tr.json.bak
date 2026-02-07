@@ -12,12 +12,12 @@
     "openGraph": {
       "title": "Carpet Store - Premium Rugs Online",
       "description": "Buy premium rugs and carpets online. Handmade, custom sizes, and modern designs.",
-      "image": "https://www.koenigcarpet.ru/og-root.jpg"
+      "image": "https://koenigcarpet.ru/og-root.jpg"
     },
     "twitter": {
       "title": "Carpet Store - Premium Rugs Online",
       "description": "Buy premium rugs and carpets online. Handmade, custom sizes, and modern designs.",
-      "image": "https://www.koenigcarpet.ru/og-root.jpg"
+      "image": "https://koenigcarpet.ru/og-root.jpg"
     }
   },
   "header": {
@@ -104,12 +104,12 @@
       "openGraph": {
         "title": "Carpet Store | Premium Rugs & Carpets",
         "description": "Discover premium rugs and carpets in various sizes, colors, and designs. Perfect for living rooms, bedrooms, and offices.",
-        "image": "https://www.koenigcarpet.ru/og-image.png"
+        "image": "https://koenigcarpet.ru/og-image.png"
       },
       "twitter": {
         "title": "Carpet Store | Premium Rugs & Carpets",
         "description": "Shop premium rugs & carpets with modern and traditional designs.",
-        "image": "https://www.koenigcarpet.ru/og-image.png"
+        "image": "https://koenigcarpet.ru/og-image.png"
       }
     }
   },

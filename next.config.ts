@@ -15,10 +15,6 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "koenigcarpet.ru",
       },
-      {
-        protocol: "https",
-        hostname: "www.koenigcarpet.ru",
-      }
     ],
     // Увеличиваем таймаут и TTL для кеширования
     minimumCacheTTL: 60,
