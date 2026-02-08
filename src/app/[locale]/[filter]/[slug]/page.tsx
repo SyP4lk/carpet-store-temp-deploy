@@ -49,7 +49,7 @@ const FilteredRugs: FC<FilteredRugsProps> = async ({ params, searchParams }) => 
       ? dict.shared.collections || 'Collection'
       : pathParams.filter === 'style'
         ? dict.shared.styles || 'Style'
-        : dict.shared.colors || 'Color'
+        : dict.filter?.colors?.title || dict.shared.colors || 'Color'
   const bannerTitle = `${filterLabel} - ${selectedValue}`
 
   return (
