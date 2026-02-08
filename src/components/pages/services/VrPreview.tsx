@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useLocale } from "@/hooks/useLocale";
+import React, { useEffect, useRef, useState } from "react";
+import type { Locale } from "@/localization/config";
 import type { RugProduct } from "@/types/product";
 import { drawImageToQuad, drawShadow, pointInQuad, type Point, type Quad } from "./vr/warp";
 
@@ -17,6 +17,7 @@ type LayerState = {
   rotateDeg: number;
   shadowPct: number;
   quad: Quad | null;
+  shadowOn: boolean;
 };
 
 function dist(a: Point, b: Point) {
@@ -104,14 +105,20 @@ function initRectQuad(canvasW: number, canvasH: number, rugImg: HTMLImageElement
   return [tl, tr, br, bl];
 }
 
-export default function VrPreview() {
-  const [locale] = useLocale();
-  const isRu = useMemo(() => locale === "ru", [locale]);
-
+export default function VrPreview({ locale }: { locale: Locale }) {
+  const isRu = locale === "ru";
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const hostRef = useRef<HTMLDivElement | null>(null);
 
   const [roomUrl, setRoomUrl] = useState<string | null>(null);
+  const setRoomUrlSafe = (next: string | null) => {
+     setRoomUrl((prev) => {
+       if (prev && prev.startsWith("blob:")) {
+         try { URL.revokeObjectURL(prev); } catch {}
+       }
+       return next;
+     });
+   };
   const [roomImg, setRoomImg] = useState<HTMLImageElement | null>(null);
 
   const [active, setActive] = useState<LayerId>("A");
@@ -120,6 +127,7 @@ export default function VrPreview() {
 
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [downloadFormat, setDownloadFormat] = useState<"png" | "jpg">("png");
 
   const [layerA, setLayerA] = useState<LayerState>({
     id: "A",
@@ -131,6 +139,7 @@ export default function VrPreview() {
     rotateDeg: 0,
     shadowPct: 25,
     quad: null,
+    shadowOn: true,
   });
 
   const [layerB, setLayerB] = useState<LayerState>({
@@ -143,6 +152,7 @@ export default function VrPreview() {
     rotateDeg: 0,
     shadowPct: 25,
     quad: null,
+    shadowOn: true,
   });
 
   const getLayer = (id: LayerId) => (id === "A" ? layerA : layerB);
@@ -183,6 +193,9 @@ export default function VrPreview() {
       });
     return () => {
       alive = false;
+      if (roomUrl && roomUrl.startsWith("blob:")) {
+         try { URL.revokeObjectURL(roomUrl); } catch {}
+       }
     };
   }, [roomUrl]);
 
@@ -217,7 +230,7 @@ export default function VrPreview() {
 
     const drawLayer = (layer: LayerState) => {
       if (!layer.img || !layer.quad) return;
-      drawShadow(ctx, layer.quad, layer.shadowPct);
+      if (layer.shadowOn) drawShadow(ctx, layer.quad, layer.shadowPct);
       drawImageToQuad(ctx, layer.img, layer.quad, 18);
     };
 
@@ -350,6 +363,11 @@ export default function VrPreview() {
     setLayer(id, { ...layer, shadowPct: nextPct });
   };
 
+  const applyShadowToggle = (id: LayerId, on: boolean) => {
+     const layer = getLayer(id);
+     setLayer(id, { ...layer, shadowOn: on });
+   };
+
   const applySize = (id: LayerId, nextSize: string) => {
     const layer = getLayer(id);
     const oldArea = layer.size ? parseSizeArea(layer.size) : null;
@@ -416,6 +434,7 @@ export default function VrPreview() {
         scalePct: 100,
         rotateDeg: 0,
         shadowPct: 25,
+        shadowOn: true,
       };
 
       setLayer(id, next);
@@ -425,28 +444,49 @@ export default function VrPreview() {
       setError(isRu ? "Ошибка загрузки" : "Load error");
     }
   };
-
-  const download = () => {
-    const c = canvasRef.current;
-    if (!c) return;
-
-    const url = c.toDataURL("image/png");
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "koenigcarpet-vr.png";
-    a.click();
-  };
+  const download = async () => {
+     const c = canvasRef.current;
+     if (!c) return;
+ 
+     setError(null);
+ 
+     const mime = downloadFormat === "jpg" ? "image/jpeg" : "image/png";
+     const ext = downloadFormat === "jpg" ? "jpg" : "png";
+ 
+     try {
+       const blob: Blob = await new Promise((resolve, reject) => {
+         c.toBlob(
+           (b) => (b ? resolve(b) : reject(new Error("toBlob failed"))),
+           mime,
+           downloadFormat === "jpg" ? 0.92 : undefined
+         );
+       });
+ 
+       const url = URL.createObjectURL(blob);
+       const a = document.createElement("a");
+       a.href = url;
+       a.download = `koenigcarpet-vr.${ext}`;
+       a.click();
+       URL.revokeObjectURL(url);
+     } catch {
+       setError(
+         isRu
+           ? "Не удалось скачать изображение (проверьте CORS и консоль)."
+           : "Download failed (check CORS and console)."
+       );
+     }
+   };
 
   const onRoomFile = async (file: File | null) => {
     if (!file) return;
     setError(null);
     try {
       const url = await downscaleToBlobUrl(file, 1600);
-      setRoomUrl(url);
+      setRoomUrlSafe(url);
     } catch {
       // fallback
       const url = URL.createObjectURL(file);
-      setRoomUrl(url);
+      setRoomUrlSafe(url);
     }
   };
 
@@ -480,7 +520,15 @@ export default function VrPreview() {
           >
             {compareMode ? (isRu ? "Обычный режим" : "Normal") : (isRu ? "Сравнение" : "Compare")}
           </button>
-
+           <select
+             id="vr-download-format"
+             className="h-10 px-2 rounded-lg border border-gray-300 bg-white text-sm"
+             value={downloadFormat}
+             onChange={(e) => setDownloadFormat(e.target.value as "png" | "jpg")}
+           >
+             <option value="png">PNG</option>
+             <option value="jpg">JPG</option>
+           </select>
           <button
             type="button"
             onClick={download}
@@ -584,6 +632,7 @@ export default function VrPreview() {
                 </label>
 
                 <select
+                  id="vr-size-select"
                   className="mt-1 w-full h-10 px-3 rounded-lg border border-gray-300 bg-white"
                   value={activeLayer.size}
                   onChange={(e) => applySize(active, e.target.value)}
@@ -614,14 +663,29 @@ export default function VrPreview() {
                   </div>
                   <input type="range" min={-90} max={90} value={activeLayer.rotateDeg} onChange={(e) => applyRotate(active, Number(e.target.value))} className="w-full" />
                 </div>
-
-                <div>
-                  <div className="flex justify-between text-xs text-gray-600">
-                    <span>{isRu ? "Тень" : "Shadow"}</span>
-                    <span>{activeLayer.shadowPct}%</span>
-                  </div>
-                  <input type="range" min={0} max={100} value={activeLayer.shadowPct} onChange={(e) => applyShadow(active, Number(e.target.value))} className="w-full" />
-                </div>
+                   <div className="flex items-center justify-between text-xs text-gray-600">
+                     <span>{isRu ? "Тень" : "Shadow"}</span>
+ 
+                     <label className="inline-flex items-center gap-2 select-none">
+                       <input
+                         type="checkbox"
+                         checked={activeLayer.shadowOn}
+                         onChange={(e) => applyShadowToggle(active, e.target.checked)}
+                       />
+                       <span>{isRu ? "Вкл" : "On"}</span>
+                     </label>
+                   </div>
+ 
+                   <input
+                     type="range"
+                     min={0}
+                     max={100}
+                     value={activeLayer.shadowPct}
+                     onChange={(e) => applyShadow(active, Number(e.target.value))}
+                     disabled={!activeLayer.shadowOn}
+                     className="w-full"
+                   />
+                 </div>
               </div>
 
               <div className="mt-4 text-xs text-gray-500">
@@ -639,6 +703,5 @@ export default function VrPreview() {
           </div>
         </div>
       </div>
-    </div>
   );
 }

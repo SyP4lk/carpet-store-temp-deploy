@@ -97,7 +97,7 @@ export default function VrPage({ params }: Props) {
             </p>
 
             <div className="mt-8">
-              <VrPreview />
+              <VrPreview locale={locale} />
             </div>
 
             <div className="mt-10">
