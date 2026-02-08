@@ -512,11 +512,11 @@ export default function VrPreview({ locale }: { locale: Locale }) {
           {error ? <p className="text-sm text-red-600 mt-1">{error}</p> : null}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => setCompareMode((v) => !v)}
-            className="h-10 px-3 rounded-lg border border-gray-300 text-gray-800 font-semibold hover:bg-gray-50"
+            className="h-10 px-4 rounded-lg border border-gray-300 text-gray-800 text-sm font-semibold hover:bg-gray-50 whitespace-nowrap"
           >
             {compareMode ? (isRu ? "Обычный режим" : "Normal") : (isRu ? "Сравнение" : "Compare")}
           </button>
@@ -540,8 +540,8 @@ export default function VrPreview({ locale }: { locale: Locale }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
-        <div className="lg:col-span-2 p-5">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-0">
+        <div className="lg:col-span-3 p-5">
           <div ref={hostRef} className="min-h-[420px] md:min-h-[560px] rounded-xl border border-gray-200 bg-gray-50 overflow-hidden relative">
             <canvas
               ref={canvasRef}
@@ -588,7 +588,7 @@ export default function VrPreview({ locale }: { locale: Locale }) {
           ) : null}
         </div>
 
-        <div className="p-5 border-t lg:border-t-0 lg:border-l border-gray-200 bg-white">
+        <div className="lg:col-span-2 p-5 border-t lg:border-t-0 lg:border-l border-gray-200 bg-white">
           <div className="space-y-4">
             <div className="p-4 rounded-xl border border-gray-200 bg-gray-50">
               <p className="text-sm font-semibold text-gray-900">
@@ -600,9 +600,9 @@ export default function VrPreview({ locale }: { locale: Locale }) {
                   {isRu ? "Артикул" : "Article"}
                 </label>
 
-                <div className="mt-1 flex gap-2">
+                <div className="mt-1 flex flex-col gap-2">
                   <input
-                    className="flex-1 h-10 px-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black/20"
+                    className="h-10 px-4 rounded-lg bg-black text-white font-semibold hover:bg-black/90"
                     value={activeLayer.article}
                     onChange={(e) => setLayer(active, { ...activeLayer, article: e.target.value })}
                     placeholder={isRu ? "Например: 2025-C-4395" : "e.g. 2025-C-4395"}
